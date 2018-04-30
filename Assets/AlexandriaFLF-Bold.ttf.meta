@@ -1,0 +1,26 @@
+fileFormatVersion: 2
+guid: 5a3b7f5fed6107649aee9c5e59993c9a
+timeCreated: 1524210924
+licenseType: Free
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 40
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: AlexandriaFLF
+  fontNames:
+  - AlexandriaFLF
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 5e341a239cc2c174c924f07b6aa042d3, type: 3}
+  - {fileID: 12800000, guid: fe1c05d4d6619d0419f6ace8f2587437, type: 3}
+  - {fileID: 12800000, guid: 73f295cdff0a0ae4485e2c9a362e71cb, type: 3}
+  customCharacters: 
+  fontRenderingMode: 2
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
