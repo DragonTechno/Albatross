@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// if there's ambiguity in what interaction the user is in, it picks one
 public class InteractionLock : MonoBehaviour {
 
     internal Interactable connectedObject;

@@ -3,29 +3,30 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// all objects with dialog and interaction on the isometric level
 public class Interactable : MonoBehaviour
 {
     public GameObject player;
     public GameObject button;
     public float nearDistance;
-    public bool scriptItem;
+    public bool scriptItem; // should be deleted at some point
     [TextArea(5, 100)]
     public string[] dialogBlock;
-    internal List<Vector2> returnCoordinates;
+    internal List<Vector2> returnCoordinates; // save coords for previous dialog menu
     internal string scriptText = "Identity";
-    internal int buttonH = 0;
-    internal int startingBlock = 0;
-    Vector3 textBottom;
-    int pages;
-    int cPage = -1;
+    internal int buttonH = 0; // dialog block height of specific option menu
+    internal int startingBlock = 0; // index of first block
+    Vector3 textBottom; // bottom of dialog panel
+    int pages; // total dialog block height, TODO change to pageH
+    int cPage = -1; // c stands for current!
     int cBlock = 0;
     bool inDialog;
-    bool active = true;
-    InteractionLock Lock;
+    bool active = true; // whether or not you can progress the block by clicking
+    InteractionLock Lock; // makes sure you're only talking to one person
     CanvasGroup dialogBox;
-    string[] dialog;
+    string[] dialog; // all of the lines in the block you're currently in
     SpriteRenderer thisSprite;
-    GameObject center;
+    GameObject center; // centers the screen when entering dialog
 
     // Use this for initialization
     void Start()
@@ -34,11 +35,13 @@ public class Interactable : MonoBehaviour
         inDialog = false;
         thisSprite = GetComponent<SpriteRenderer>();
         Lock = FindObjectOfType<Canvas>().GetComponentInChildren<InteractionLock>();
+        // easier to find the dialogbox from Lock
         dialogBox = Lock.gameObject.GetComponent<CanvasGroup>();
         dialog = dialogBlock[cBlock].Split('\n');
         pages = dialog.Length;
         float xPos = dialogBox.transform.position.x;
         float yPos = dialogBox.transform.position.y;
+        // makes dialog window invisible when you start
         dialogBox.alpha = 0;
         dialogBox.interactable = false;
         dialogBox.blocksRaycasts = false;
