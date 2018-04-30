@@ -1,4 +1,6 @@
 [Ll]ibrary/
+Library/
+Library/metadata/
 [Tt]emp/
 [Oo]bj/
 [Bb]uild/
@@ -34,14 +36,3 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
-Library/assetDatabase3
-Library/assetDatabase3
-Library/CurrentLayout.dwlt
-Library/metadata/18/18b4dbf8a0b54ea4adf46fb7f4d71dd0
-Library/metadata/24/2403d1f95ea54028853403e595bc9274
-Library/metadata/51/51288a4fc4384861a5b1f9dd49b3da26
-Library/metadata/84/84df0ddcc647ca244a8c07c01a309897
-Library/metadata/bb/bb6b4101ad2c42ec99f064a70c354e3c
-Library/ScriptAssemblies/Assembly-CSharp.dll
-Library/ScriptAssemblies/Assembly-CSharp.dll.mdb
-Library/ScriptAssemblies/BuiltinAssemblies.stamp
