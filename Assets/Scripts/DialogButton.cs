@@ -5,11 +5,11 @@ using UnityEngine.UI;
 
 public class DialogButton : MonoBehaviour {
     Interactable connectedDialog;
-    string scriptString;
+    List<string> scriptText;
 
-    public void Initialize(string scriptString, Interactable connectedDialog, string text)
+    public void Initialize(List<string> scriptText, Interactable connectedDialog, string text)
     {
-        this.scriptString = scriptString;
+        this.scriptText = scriptText;
         this.connectedDialog = connectedDialog;
         Button parentButton = GetComponent<Button>();
         parentButton.GetComponentInChildren<Text>().text = text;
@@ -29,8 +29,8 @@ public class DialogButton : MonoBehaviour {
 
     public void ChangeScript()
     {
-        print(scriptString + " from a button");
-        connectedDialog.RunString(scriptString);
+        print(scriptText + " from a button");
+        connectedDialog.RunString(scriptText);
     }
 
     public void DestroyButtons ()
@@ -41,6 +41,5 @@ public class DialogButton : MonoBehaviour {
             Destroy(choice.gameObject);
         }
         connectedDialog.Activate();
-        connectedDialog.buttonH = 0;
     }
 }

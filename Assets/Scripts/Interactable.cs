@@ -8,13 +8,15 @@ public class Interactable : MonoBehaviour
 {
     public GameObject player;
     public GameObject button;
+    public GlobalDictionary dictionary;
     public float nearDistance;
     public bool scriptItem; // should be deleted at some point
     [TextArea(5, 100)]
     public string[] dialogBlock;
     internal List<Vector2> returnCoordinates; // save coords for previous dialog menu
-    internal string scriptText = "Identity";
-    internal int buttonH = 0; // dialog block height of specific option menu
+    internal List<string> scriptText;
+    internal int topOfPage = 0;
+    internal int pageH = 0; // dialog block height of specific option menu
     internal int startingBlock = 0; // index of first block
     Vector3 textBottom; // bottom of dialog panel
     int pages; // total dialog block height, TODO change to pageH
@@ -31,6 +33,7 @@ public class Interactable : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        dictionary = FindObjectOfType<GlobalDictionary>();
         returnCoordinates = new List<Vector2>();
         inDialog = false;
         thisSprite = GetComponent<SpriteRenderer>();
@@ -46,6 +49,7 @@ public class Interactable : MonoBehaviour
         dialogBox.interactable = false;
         dialogBox.blocksRaycasts = false;
         textBottom = new Vector3(xPos, yPos, 0);
+        scriptText = new List<string>();
     }
 
     // Update is called once per frame
@@ -89,107 +93,247 @@ public class Interactable : MonoBehaviour
                     ProgressText();
                 }
             }
-            else if (inDialog && cPage < pages - (1 + buttonH))
+            else if (inDialog && cPage < pages - (pageH + 1))
             {
                 RunString(scriptText); //Run any script associated with the last panel.
-                scriptText = "Identity"; //"Identity" just means "Continue", will probably change it to that.
-                cPage += 1 + buttonH;
+                scriptText = new List<string>();
+                cPage += pageH;
+                print(pageH);
+                pageH = 0;
+                topOfPage = cPage + 1;
+                //print("Parsing from dialog");
+                string printLine = parsePage();
                 Text dialogText = dialogBox.GetComponentInChildren<Text>();
-                string printLine = dialog[cPage];
-                string nextLine = "";
-                int optsGenerated = 1;
-                if (printLine[0] == '\\') //Check if we're at the beginning of an options block
-                {
-                    printLine = printLine.Substring(1, printLine.Length - 1);
-                    ++buttonH;
-                    if (cPage < pages - 1)
-                    {
-                        nextLine = dialog[cPage + 1];
-                        if (nextLine[0] == '>')
-                        {
-                            ++cPage;
-                        }
-                        while (nextLine[0] == '>') //Parse through options
-                        {
-                            ++buttonH;
-                            string buttonText = nextLine.Substring(2, nextLine.Length - 2);
-                            if (cPage < pages - 1)
-                            {
-                                ++cPage;
-                                nextLine = dialog[cPage];
-                                string[] phrases = nextLine.Split(' ');
-                                if (phrases[0] == "%") //Check for scripts
-                                {
-                                    scriptText = nextLine.Substring(2, nextLine.Length - 2);
-                                    ++buttonH;
-                                    if (cPage < pages - 1)
-                                    {
-                                        ++cPage;
-                                        nextLine = dialog[cPage];
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                nextLine = "";
-                            }
-                            GameObject optionButton = Instantiate(button, textBottom, Quaternion.identity, dialogBox.transform);
-                            optionButton.transform.position = textBottom + (optsGenerated * .75f) * Vector3.up;
-                            optionButton.GetComponent<DialogButton>().Initialize(scriptText, this, buttonText); scriptText = "Identity";
-                            scriptText = "Identity";
-                            ++optsGenerated;
-                            Deactivate();
-                        }
-                    }
-                    cPage -= buttonH + 1;
-                }
-                else
-                {
-                    if (cPage < pages - 1)
-                    {
-                        string checkLine = dialog[cPage + 1];
-                        string[] phrases = checkLine.Split(' ');
-                        if (phrases[0] == "%")//Check for scripts
-                        {
-                            scriptText = checkLine.Substring(2, checkLine.Length - 2);
-                            cPage += 1;
-                        }
-                    }
-                }
                 dialogText = dialogBox.GetComponentInChildren<Text>();
                 dialogText.text = printLine; //Add text to the panel
+                pageH += cPage - topOfPage;
+                cPage = topOfPage;
             }
             else
             {
                 RunString(scriptText); //Run the script even if the window is closing.
-                scriptText = "Identity";
-                if (returnCoordinates.Count == 0) //End the conversation if there is no return
-                {                                 //location.
-                    inDialog = false;
-                    Destroy(center); //Destroy the focus object from the conversation
-                    FindObjectOfType<FollowObject>().SwitchFocus(player);
-                    Lock.Unlock();
-                    player.GetComponent<IsoMovement>().MovementToggle(true);
-                    dialogBox.alpha = 0;
-                    dialogBox.interactable = false;
-                    dialogBox.blocksRaycasts = false;
-                    cBlock = startingBlock;
-                    cPage = -1;
+                scriptText = new List<string>();
+                if (cPage >= pages - (pageH + 1))
+                {
+                    pageH = 0;
+                    if (returnCoordinates.Count == 0) //End the conversation if there is no return
+                    {                                  //location.
+                        inDialog = false;
+                        Destroy(center); //Destroy the focus object from the conversation
+                        FindObjectOfType<FollowObject>().SwitchFocus(player);
+                        Lock.Unlock();
+                        player.GetComponent<IsoMovement>().MovementToggle(true);
+                        dialogBox.alpha = 0;
+                        dialogBox.interactable = false;
+                        dialogBox.blocksRaycasts = false;
+                        cBlock = startingBlock;
+                        cPage = -1;
+                    }
+                    else
+                    {   //If the return list isn't empty, go to its last location.
+                        Vector2 coordinate = returnCoordinates[returnCoordinates.Count - 1];
+                        returnCoordinates.RemoveAt(returnCoordinates.Count - 1);
+                        SwitchBlocks((int)coordinate.x, (int)coordinate.y);
+                        ProgressText();
+                    }
                 }
                 else
-                {   //If the return list isn't empty, go to its last location.
-                    Vector2 coordinate = returnCoordinates[returnCoordinates.Count - 1];
-                    returnCoordinates.RemoveAt(returnCoordinates.Count - 1);
-                    SwitchBlocks((int)coordinate.x, (int)coordinate.y + 1);
+                {
+                    pageH = 0;
                     ProgressText();
                 }
             }
         }
     }
 
+    public string parsePage()
+    {
+        ++cPage;
+        //print(cPage);
+        dialog = dialogBlock[cBlock].Split('\n');
+        string startLine = dialog[cPage];
+        print("Start line " + startLine);
+        string returnLine = "";
+        string checkLine = "";
+        //Check for an option block
+        if(startLine.Substring(0,2) == "if")
+        {
+            bool booleanVal = CheckTruth(startLine);
+            ++cPage;
+            if (booleanVal)
+            {
+                ++cPage;
+                startLine = dialog[cPage];
+            }
+            else
+            {
+                while (checkLine != "else")
+                {
+                    ++cPage;
+                    checkLine = dialog[cPage + 1];
+                }
+                cPage += 2;
+                startLine = dialog[cPage];
+            }
+        }
+        else if (startLine == "else")
+        {
+            checkLine = CheckAhead(dialog, cPage);
+            while (checkLine != "end")
+            {
+                print("End loop " + cPage);
+                ++cPage;
+                checkLine = dialog[cPage + 1];
+            }
+            cPage += 2;
+            startLine = dialog[cPage];
+            print("Line after end " + startLine);
+        }
+        else if (startLine == "end")
+        {
+            ++cPage;
+            startLine = dialog[cPage];
+        }
+        if (startLine[0] == '\\')
+        {
+            Deactivate();
+            topOfPage = cPage;
+            int optsGenerated = 1;
+            returnLine = startLine.Substring(1, startLine.Length - 1);
+            checkLine = CheckAhead(dialog, cPage);
+            while (checkLine[0] == '>' && cPage < pages - 1)
+            {
+                //print("Parsing from options");
+                string buttonText = parsePage();
+                GameObject optionButton = Instantiate(button, textBottom, Quaternion.identity, dialogBox.transform);
+                optionButton.transform.position = textBottom + (optsGenerated * .75f) * Vector3.up;
+                optionButton.GetComponent<DialogButton>().Initialize(scriptText, this, buttonText);
+                scriptText = new List<string>();
+                //print(cPage);
+                checkLine = CheckAhead(dialog, cPage);
+                //print("Check line " + checkLine);
+                ++optsGenerated;
+            }
+        }
+        else if (startLine[0] == '>') //Check for an option
+        {
+            returnLine = startLine.Substring(2, startLine.Length - 2);
+            //print(returnLine);
+        }
+        else //Otherwise, return normal text
+        {
+            returnLine = startLine;
+        }
+        //Check for scripts attached to a line.
+        if (cPage < pages - 1)
+        { 
+            checkLine = CheckAhead(dialog, cPage);
+        }
+        while (cPage < pages - 1 && checkLine[0] == '%')
+        {
+            //print("Script check " +checkLine);
+            scriptText.Add(checkLine.Substring(2, checkLine.Length - 2));
+            ++cPage;
+            if (cPage < pages - 1)
+            {
+                checkLine = CheckAhead(dialog, cPage);
+            }
+            else
+            {
+                checkLine = "";
+            }
+        }
+        return returnLine;
+    }
+
+    string CheckAhead(string[] cDialog,int currPage)
+    {
+        print("Page in check ahead " + currPage);
+        bool conditions = false;
+        while(!conditions && currPage < cDialog.Length-1)
+        {
+            ++currPage;
+            print("Loop " + cDialog[currPage]);
+            string[] phrases = cDialog[currPage].Split(' ');
+            if (phrases[0] == "if")
+            {
+                bool checkBool = CheckTruth(cDialog[currPage]);
+                print(checkBool);
+                if (checkBool)
+                {
+                    ++currPage;
+                    print("Checkbool " + cDialog[currPage]);
+                }
+                else
+                {
+                    while (phrases[0] != "else")
+                    {
+                        ++currPage;
+                        phrases = cDialog[currPage].Split(' ');
+                    }
+                }
+            }
+            else if (phrases[0] == "else")
+            {
+                while (phrases[0] != "end")
+                {
+                    ++currPage;
+                    phrases = cDialog[currPage].Split(' ');
+                }
+            }
+            else if (phrases[0] == "end")
+            {
+                ++currPage;
+            }
+            else
+            {
+                conditions = true;
+            }
+        }
+        print(cDialog[currPage] + " found ahead");
+        cPage = currPage - 1;
+        return cDialog[currPage];
+    }
+
+    bool CheckTruth(string startLine)
+    {
+        string[] phrases = startLine.Split();
+        bool booleanVal;
+        if (phrases.Length == 2)
+        {
+            booleanVal = dictionary.BooleanDictionary[phrases[1]];
+        }
+        else
+        {
+            int dictVar = dictionary.IntDictionary[phrases[1]];
+            int compVar = 0;
+            int.TryParse(phrases[3], out compVar);
+            if (phrases[2] == ">")
+            {
+                booleanVal = (dictVar > compVar);
+            }
+            else if (phrases[2] == ">=")
+            {
+                booleanVal = (dictVar >= compVar);
+            }
+            else if (phrases[2] == "<")
+            {
+                booleanVal = (dictVar < compVar);
+            }
+            else if (phrases[2] == "<=")
+            {
+                booleanVal = (dictVar <= compVar);
+            }
+            else
+            {
+                booleanVal = (dictVar == compVar);
+            }
+        }
+        return booleanVal;
+    }
+
     public void SwitchBlocks(int Block, int Page) //Switch to a line, without a return
     {
-        buttonH = 0;
         cBlock = Block;
         dialog = dialogBlock[Block].Split('\n');
         pages = dialog.Length;
@@ -198,114 +342,89 @@ public class Interactable : MonoBehaviour
 
     public void ReturnSwitch(int Block, int Page) //Switch to a line, to return later
     {
-        buttonH = 0;
         returnCoordinates.Add(new Vector2(cBlock, cPage));
         cBlock = Block;
         dialog = dialogBlock[Block].Split('\n');
         pages = dialog.Length;
         cPage = Page - 1;
+        print(cBlock.ToString() + " " + cPage);
     }
 
-    public void Deactivate()
+    public void Deactivate() //Stop clicking the panel from progressing text
     {
         active = false;
     }
 
-    public void Activate()
+    public void Activate() //Make clicking the panel progress text.
     {
         active = true;
+        scriptText = new List<string>();
         ProgressText();
     }
 
-    public void RunString(string script) //Run dialog scripts based on their names
+    public void RunString(List<string> scripts) //Run dialog scripts based on their names
     {
-        script = script.Replace("\n", string.Empty);
-        string[] phrases = script.Split(' ');
-        if (phrases[0] == "goto")
+        foreach (string script in scripts)
         {
-            int Block;
-            int Page;
-            int.TryParse(phrases[1], out Block);
-            int.TryParse(phrases[2], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            SwitchBlocks(Block, Page);
+            print(script);
+            string tempScript = script.Replace("\n", string.Empty);
+            string[] phrases = tempScript.Split(' ');
+            if (phrases[0] == "goto")
+            {
+                setLocation(1, 2, phrases,false);
+            }
+            else if (phrases[0] == "return")
+            {
+                setLocation(1, 2, phrases,true);
+            }
+            else if (phrases[0] == "newpath")
+            {
+                returnCoordinates = new List<Vector2>();
+            }
+            else if (phrases[0] == "AddItem")
+            {
+                FindObjectOfType<PopupMenu>().AddItem(phrases[1]);
+            }
+            else if (phrases[0] == "RemItem")
+            {
+                FindObjectOfType<PopupMenu>().RemoveItem(phrases[1]);
+            }
+            else if (phrases[0] == "AddQuest")
+            {
+                FindObjectOfType<PopupMenu>().AddQuest(phrases[1]);
+            }
+            else if (phrases[0] == "RemQuest")
+            {
+                FindObjectOfType<PopupMenu>().RemoveQuest(phrases[1]);
+            }
+            else if (phrases[0] == "Continue")
+            {
+            }
+            else if (phrases.Length == 1)
+            {
+                Invoke(phrases[0], 0);
+            }
+            else
+            {
+                print("Behavior undefined");
+            }
         }
-        else if (phrases[0] == "return")
+    }
+
+    void setLocation(int b, int p, string[] phrases, bool willReturn)
+    {
+        pageH = 0;
+        int Block;
+        int Page;
+        int.TryParse(phrases[b], out Block);
+        int.TryParse(phrases[p], out Page);
+        if (willReturn)
         {
-            int Block;
-            int Page;
-            int.TryParse(phrases[1], out Block);
-            int.TryParse(phrases[2], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
             ReturnSwitch(Block, Page);
-        }
-        else if (phrases[0] == "newpath")
-        {
-            int Block;
-            int Page;
-            int.TryParse(phrases[1], out Block);
-            int.TryParse(phrases[2], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            returnCoordinates = new List<Vector2>();
-            SwitchBlocks(Block, Page);
-        }
-        else if (phrases[0] == "AddItem")
-        {
-            int Block;
-            int Page;
-            int.TryParse(phrases[2], out Block);
-            int.TryParse(phrases[3], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            ReturnSwitch(Block, Page);
-            FindObjectOfType<PopupMenu>().AddItem(phrases[1]);
-        }
-        else if (phrases[0] == "RemItem")
-        {
-            int Block;
-            int Page;
-            int.TryParse(phrases[2], out Block);
-            int.TryParse(phrases[3], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            ReturnSwitch(Block, Page);
-            FindObjectOfType<PopupMenu>().RemoveItem(phrases[1]);
-        }
-        else if (phrases[0] == "AddQuest")
-        {
-            int Block;
-            int Page;
-            int.TryParse(phrases[2], out Block);
-            int.TryParse(phrases[3], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            ReturnSwitch(Block, Page);
-            FindObjectOfType<PopupMenu>().AddQuest(phrases[1]);
-        }
-        else if (phrases[0] == "RemQuest")
-        {
-            int Block;
-            int Page;
-            int.TryParse(phrases[2], out Block);
-            int.TryParse(phrases[3], out Page);
-            print("Block " + Block.ToString());
-            print("Page " + Page.ToString());
-            ReturnSwitch(Block, Page);
-            FindObjectOfType<PopupMenu>().RemoveQuest(phrases[1]);
-        }
-        else if (phrases[0] == "Identity")
-        {
-        }
-        else if (phrases.Length == 1)
-        {
-            Invoke(phrases[0], 0);
         }
         else
         {
-            print("Behavior undefined");
+            SwitchBlocks(Block, Page);
         }
     }
 }
