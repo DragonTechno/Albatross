@@ -7,6 +7,7 @@ public class LandInTown : MonoBehaviour {
 
 	public string townName;
 	public float townHeight;
+    bool loading;
 	Collider2D thisCollider; 
 	ContactFilter2D playerFilter;
 	PlaneManagement planeMan;
@@ -27,8 +28,9 @@ public class LandInTown : MonoBehaviour {
 			if (playerObject)
 			{
 				GameObject other = playerObject.gameObject;
-				if (other.tag == "Plane" && Mathf.Abs(other.transform.position.z) <= townHeight)
+				if (other.tag == "Plane" && Mathf.Abs(other.transform.position.z) <= townHeight && !loading)
 				{
+                    loading = true;
 					print (other.transform.position);
 					planeMan = FindObjectOfType<PlaneManagement> ();
 					planeMan.landingPosition = other.transform.position + 1*Vector3.back;

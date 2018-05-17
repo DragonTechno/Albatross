@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class DialogButton : MonoBehaviour {
-    Interactable connectedDialog;
+    Dialog connectedDialog;
     List<string> scriptText;
 
-    public void Initialize(List<string> scriptText, Interactable connectedDialog, string text)
+    public void Initialize(List<string> scriptText, Dialog connectedDialog, string text)
     {
         this.scriptText = scriptText;
         this.connectedDialog = connectedDialog;

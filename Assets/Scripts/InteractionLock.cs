@@ -23,7 +23,7 @@ public class InteractionLock : MonoBehaviour {
     {
         if (connectedObject)
         {
-            connectedObject.ProgressText();
+            connectedObject.InteractionAction();
         }
     }
 
