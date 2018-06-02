@@ -22,68 +22,74 @@ public class turnFollow : MonoBehaviour {
 
 	// Update is called once per frame
 	void FixedUpdate () {
-		float pushRadius = 10f;
-		float pushForce = 5f;
-		Vector2 distance = target.transform.position - transform.position;
-		if (distance.magnitude < followDistance)
-		{
-			pushForce = pushForce * 2;
-			float HeightFollowRate = 6f;
-			if (!IsInvoking ("FollowHeight"))
-			{
-				InvokeRepeating ("FollowHeight", 0, HeightFollowRate);
-			}
-			planeMan.RequestFight ();
-            // right keeps track of where the pointer is pointing to, or where its right side points to
-			transform.right = (Vector2)Vector3.RotateTowards (transform.right, distance, turnSpeed*Random.Range(.7f,1.4f), turnSpeed);
-            // the math part of this line makes sure that enemies goes faster when they're further away and is capped
-            rb.velocity = transform.right * speed * Mathf.Clamp (Mathf.Sqrt (distance.magnitude / 10), 1, 1.5f);
-            //rb.velocity = (Vector2.Dot(rb.velocity.normalized * Mathf.Clamp(rb.velocity.magnitude,speed,speed*1.5f), transform.right))*transform.right;
-		}
-		else
-		{
-			CancelInvoke ("FollowHeight");
-		}
-        // an empty list that we'll add to if there are any overlapping enemies
-		Collider2D[] nearby = new Collider2D[10];
-        // filter states that we're only looking for objects with the enemy layer
-		ContactFilter2D enemyFilter = new ContactFilter2D ();
-		enemyFilter.SetLayerMask (LayerMask.GetMask("Enemy"));
-		Physics2D.OverlapCircle (transform.position, pushRadius, enemyFilter, nearby);
-		foreach (Collider2D collider in nearby)
-		{
-			if (collider)
-			{
-				if (collider.gameObject.GetComponent<turnFollow> ())
-				{
-					turnFollow unit = collider.attachedRigidbody.gameObject.GetComponent<turnFollow> ();
-					// calculate direction from target to me
-					if (enemyType == unit.enemyType)
-					{
-						Vector2 bvec = transform.position - unit.gameObject.transform.position;
-						bvec = bvec.normalized * Mathf.Clamp (pushForce / bvec.magnitude, 1, 100);
-						rb.AddForce (bvec);
-					}
-				}
-			}
-		}
+        if (target)
+        {
+            float pushRadius = 10f;
+            float pushForce = 5f;
+            Vector2 distance = target.transform.position - transform.position;
+            if (distance.magnitude < followDistance)
+            {
+                pushForce = pushForce * 2;
+                float HeightFollowRate = 6f;
+                if (!IsInvoking("FollowHeight"))
+                {
+                    InvokeRepeating("FollowHeight", 0, HeightFollowRate);
+                }
+                planeMan.RequestFight();
+                // right keeps track of where the pointer is pointing to, or where its right side points to
+                transform.right = (Vector2)Vector3.RotateTowards(transform.right, distance, turnSpeed * Random.Range(.7f, 1.4f), turnSpeed);
+                // the math part of this line makes sure that enemies goes faster when they're further away and is capped
+                rb.velocity = transform.right * speed * Mathf.Clamp(Mathf.Sqrt(distance.magnitude / 10), 1, 1.5f);
+                //rb.velocity = (Vector2.Dot(rb.velocity.normalized * Mathf.Clamp(rb.velocity.magnitude,speed,speed*1.5f), transform.right))*transform.right;
+            }
+            else
+            {
+                CancelInvoke("FollowHeight");
+            }
+            // an empty list that we'll add to if there are any overlapping enemies
+            Collider2D[] nearby = new Collider2D[10];
+            // filter states that we're only looking for objects with the enemy layer
+            ContactFilter2D enemyFilter = new ContactFilter2D();
+            enemyFilter.SetLayerMask(LayerMask.GetMask("Enemy"));
+            Physics2D.OverlapCircle(transform.position, pushRadius, enemyFilter, nearby);
+            foreach (Collider2D collider in nearby)
+            {
+                if (collider)
+                {
+                    if (collider.gameObject.GetComponent<turnFollow>())
+                    {
+                        turnFollow unit = collider.attachedRigidbody.gameObject.GetComponent<turnFollow>();
+                        // calculate direction from target to me
+                        if (enemyType == unit.enemyType)
+                        {
+                            Vector2 bvec = transform.position - unit.gameObject.transform.position;
+                            bvec = bvec.normalized * Mathf.Clamp(pushForce / bvec.magnitude, 1, 100);
+                            rb.AddForce(bvec);
+                        }
+                    }
+                }
+            }
+        }
 	}
 
 	void FollowHeight()
 	{
-		float strataHeight = Mathf.Round (transform.position.z / planeMan.strata);
-		float targetHeight = Mathf.Round (target.transform.position.z / planeMan.strata);
-		if (targetHeight != strataHeight)
-		{
-			if(targetHeight < strataHeight)
-			{
-				transform.position += Vector3.back * planeMan.strata;
-			}
-			else
-			{
-				transform.position += Vector3.forward * planeMan.strata;
-			}
-		}
+        if (target)
+        {
+            float strataHeight = Mathf.Round(transform.position.z / planeMan.strata);
+            float targetHeight = Mathf.Round(target.transform.position.z / planeMan.strata);
+            if (targetHeight != strataHeight)
+            {
+                if (targetHeight < strataHeight)
+                {
+                    transform.position += Vector3.back * planeMan.strata;
+                }
+                else
+                {
+                    transform.position += Vector3.forward * planeMan.strata;
+                }
+            }
+        }
 	}
 
     void CheckAgain()

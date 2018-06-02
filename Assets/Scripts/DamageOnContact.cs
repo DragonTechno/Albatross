@@ -15,10 +15,10 @@ public class DamageOnContact : MonoBehaviour {
 	{
 		GameObject other = coll.gameObject;
 		print ("Explosion collision with " + other.tag);
-		if (other.GetComponent<Health>())
+		if (other.GetComponentInParent<Health>())
 		{
 			print ("Damage");
-			other.GetComponent<Health> ().takeDamage(damage);
+			other.GetComponentInParent<Health> ().takeDamage(damage, gameObject);
 		}
 	}
 }

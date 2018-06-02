@@ -9,6 +9,11 @@ public class PlaneFlight : MonoBehaviour {
 	public float minSpeed;
 	public float maxSpeed;
 	public float acceleration;
+    public float forwardVelocity;
+    public float dodgeVelocity;
+    float trueMinSpeed;
+    float trueMaxSpeed;
+    bool midDodge;
 	bool rising;
 	Animator anim;
 	PlaneManagement planeMan;
@@ -16,11 +21,15 @@ public class PlaneFlight : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		anim = GetComponent<Animator> ();
+        trueMinSpeed = minSpeed;
+        trueMaxSpeed = maxSpeed;
+        anim = GetComponent<Animator> ();
 		rb = GetComponent<Rigidbody2D> ();
-		rb.velocity = transform.right * minSpeed;
+        forwardVelocity = minSpeed;
+		rb.velocity = transform.right * forwardVelocity;
 		planeMan = FindObjectOfType<PlaneManagement> ();
         Invoke("CheckAgain", .05f);
+        midDodge = false;
     }
 
     // Update is called once per frame
@@ -65,7 +74,8 @@ public class PlaneFlight : MonoBehaviour {
 				}
 			}
 		}
-		rb.velocity = transform.right * rb.velocity.magnitude;
+        //rb.velocity = transform.right * forwardVelocity + transform.up * dodgeVelocity;
+        rb.velocity = transform.right * forwardVelocity;
 		if (transform.position.z >= 0)
 		{
 			transform.position = (Vector2) transform.position;
@@ -81,34 +91,29 @@ public class PlaneFlight : MonoBehaviour {
 		}
 		if (Input.GetKey (KeyCode.UpArrow))
 		{
-			rb.velocity += (Vector2) transform.right * acceleration;
-			if (Vector2.Dot(rb.velocity,transform.right)/transform.right.magnitude  > maxSpeed)
-			{
-				rb.velocity = rb.velocity.normalized * maxSpeed;
-			}
+			forwardVelocity += acceleration;
 		}
 		if (Input.GetKey (KeyCode.DownArrow))
 		{
-			rb.velocity -= (Vector2) transform.right * acceleration;
-			if (Vector2.Dot(rb.velocity,transform.right)/transform.right.magnitude < minSpeed)
-			{
-				rb.velocity = rb.velocity.normalized * minSpeed;
-			}
+			forwardVelocity -= acceleration;
 		}
+        forwardVelocity = Mathf.Clamp(forwardVelocity, minSpeed, maxSpeed);
 		if (Input.GetKey (KeyCode.Q))
 		{
-			/*if (!anim.GetBool ("DodgeL") && !anim.GetBool ("DodgeR"))
+			if (!midDodge)
 			{
 				anim.SetBool ("DodgeL", true);
-			}*/
+                StartCoroutine(Dodge("Left"));
+			}
 		}
 		if (Input.GetKey (KeyCode.E))
 		{
-			/*if (!anim.GetBool ("DodgeL") && !anim.GetBool ("DodgeR"))
+			if (!midDodge)
 			{
 				anim.SetBool ("DodgeR", true);
-			}*/
-		}
+                StartCoroutine(Dodge("Right"));
+            }
+        }
 	}
 
 	public IEnumerator ChangeStrata(int direction)
@@ -126,12 +131,25 @@ public class PlaneFlight : MonoBehaviour {
         rising = false;
 	}
 
-	public IEnumerator Invincible(float duration)
-	{
-        GetComponent<Collider2D>().enabled = false;
-		yield return new WaitForSecondsRealtime(duration);
-		GetComponent<Collider2D>().enabled = true;
-	}
+    public IEnumerator Dodge(string direction)
+    {
+        midDodge = true;
+        GetComponent<Health>().StartInvincibility(.25f);
+        float dodgeSpeed = 25f;
+        maxSpeed = maxSpeed * 2;
+        minSpeed = minSpeed * 2;
+        forwardVelocity = maxSpeed;
+        dodgeVelocity = dodgeSpeed;
+        if(direction == "Right")
+        {
+            dodgeVelocity = -dodgeVelocity;
+        }
+        yield return new WaitForSecondsRealtime(.25f);
+        midDodge = false;
+        dodgeVelocity = 0f;
+        minSpeed = trueMinSpeed;
+        maxSpeed = trueMaxSpeed;
+    }
 
 	public void EndDodge()
 	{

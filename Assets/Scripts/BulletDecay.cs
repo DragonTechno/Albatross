@@ -9,7 +9,7 @@ public class BulletDecay : MonoBehaviour {
 	float timer = 0;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		dmg = GetComponent<DamageHandler> ();
 	}
 
@@ -27,8 +27,8 @@ public class BulletDecay : MonoBehaviour {
 		GameObject other = coll.gameObject;
 		if (other.tag == "Damageable")
 		{
-			print ("Bullet!"); 
-			other.GetComponent<Health> ().currentHealth -= dmg.damage;
+            print("Bullet!");
+            other.GetComponentInParent<Health>().takeDamage(dmg.damage, gameObject);
 			Destroy (gameObject);
 		}
 	}

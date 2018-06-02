@@ -8,6 +8,7 @@ public class JumpAheadOf : MonoBehaviour {
 	public float followRate;
 	public float followSpeed;
 	public float rangeAhead;
+    public float delay;
 	public GameObject target;
 	Vector2 startVector;
 	Vector2 targetVector;
@@ -16,7 +17,7 @@ public class JumpAheadOf : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		
+        timer = delay;
 	}
 	
 	// Update is called once per frame
@@ -43,7 +44,7 @@ public class JumpAheadOf : MonoBehaviour {
 				timer = 0;
 				following = true;
 				float range = 1f;
-				targetVector = (Vector2) target.transform.position + target.GetComponent<Rigidbody2D> ().velocity * rangeAhead + new Vector2(Random.Range(-range,range),Random.Range(-range,range));
+				targetVector = (Vector2) target.transform.position + target.GetComponentInParent<Rigidbody2D> ().velocity * rangeAhead + new Vector2(Random.Range(-range,range),Random.Range(-range,range));
 				startVector = transform.position;
 			}
 		}
