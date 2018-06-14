@@ -17,7 +17,7 @@ public class StretchBetween : MonoBehaviour {
         Vector2 midlength = point1 - point2;
         transform.localScale = new Vector2((midlength).magnitude, transform.localScale.y);
         transform.right = midlength;
-        transform.position = point2 + midlength * .5f;
+        transform.position = (Vector3) (point2 + midlength * .5f) + Vector3.forward*transform.position.z;
 	}
 	
 	// Update is called once per frame
@@ -27,6 +27,6 @@ public class StretchBetween : MonoBehaviour {
         Vector2 midlength = point1 - point2;
         transform.localScale = new Vector2((midlength).magnitude, transform.localScale.y);
         transform.right = midlength;
-        transform.position = point2 + midlength * .5f;
+        transform.position = (Vector3)(point2 + midlength * .5f) + Vector3.forward * transform.position.z;
     }
 }

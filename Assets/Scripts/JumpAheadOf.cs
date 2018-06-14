@@ -22,15 +22,18 @@ public class JumpAheadOf : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		if (following)
+        print(following + " " + gameObject.name);
+        if (following)
 		{
-			if ((startVector - (Vector2) target.transform.position).magnitude < maxDistance && ((Vector2)transform.position != targetVector))
+            if ((startVector - (Vector2) target.transform.position).magnitude < maxDistance && ((Vector2)transform.position != targetVector))
 			{
+                print(transform.position);
 				transform.position = Vector2.MoveTowards (transform.position, targetVector, followSpeed * Time.fixedDeltaTime);
-			}
-			else
+                print(transform.position);
+            }
+            else
 			{
-				following = false;
+                following = false;
 			}
 		}
 		else
