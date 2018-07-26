@@ -20,5 +20,11 @@ public class DamageOnContact : MonoBehaviour {
 			print ("Damage");
 			other.GetComponentInParent<Health> ().takeDamage(damage, gameObject);
 		}
+        Physics2D.IgnoreCollision(coll.collider,GetComponent<Collider2D>());
 	}
+
+    internal void setDamage(int dmg)
+    {
+        damage = dmg;
+    }
 }

@@ -12,8 +12,8 @@ public class PlaneManagement : MonoBehaviour {
 	internal Quaternion planeRotation;
 	public bool fighting;
 	public bool map;
-	bool fightRequest;
 	int scenesLoaded;
+    int enemiesFighting;
 
 	void Awake()
 	{
@@ -30,7 +30,6 @@ public class PlaneManagement : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        fightRequest = true;
         fighting = false;
 		DontDestroyOnLoad (gameObject);
 		landingPosition = Vector3.zero;
@@ -38,6 +37,14 @@ public class PlaneManagement : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        if(enemiesFighting <= 0)
+        {
+            fighting = false;
+        }
+        else
+        {
+            fighting = true;
+        }
 	}
 
 	void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -52,19 +59,12 @@ public class PlaneManagement : MonoBehaviour {
 
 	public void RequestFight ()
 	{
-        fightRequest = true;
+        enemiesFighting += 1;
+        fighting = true;
 	}
 
-	void LateUpdate()
-	{
-		if (fightRequest)
-		{
-            fighting = true;
-			fightRequest = false;
-		}
-		else
-		{
-			fighting = false;
-		}
-	}
+    public void LeaveFight()
+    {
+        enemiesFighting -= 1;
+    }
 }

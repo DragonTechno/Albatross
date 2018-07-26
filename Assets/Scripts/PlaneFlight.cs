@@ -33,45 +33,20 @@ public class PlaneFlight : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
-        if (planeMan.fighting)
+    void FixedUpdate () {
+        if (planeMan.fighting && !rising && transform.position.z > -planeMan.shift+.1f)
+        {
+            transform.position = new Vector3(transform.position.x,transform.position.y,0) + planeMan.shift * Vector3.back;
+        }
+		if (Input.GetKey (KeyCode.W))
 		{
-            if (!rising)
-            {
-                if (transform.position.z > -planeMan.shift+.1f)
-                {
-                    transform.position = new Vector3(transform.position.x,transform.position.y,0) + planeMan.shift * Vector3.back;
-                }
-                else
-                {
-                    float height = Mathf.RoundToInt((transform.position.z+planeMan.shift) / planeMan.strata) * planeMan.strata - planeMan.shift;
-                    transform.position = new Vector3(transform.position.x, transform.position.y, height);
-                }
-            }
-			if (Input.GetKeyDown(KeyCode.W))
-			{
-				StartCoroutine(ChangeStrata(1));
-			}	
-			if (Input.GetKeyDown (KeyCode.S))
-			{
-				if (transform.position.z < 0)
-				{
-					StartCoroutine(ChangeStrata(-1));
-				}
-			}
-		}
-		else
+			transform.position += Vector3.back*riseSpeed/2;
+		}	
+		if (Input.GetKey (KeyCode.S))
 		{
-			if (Input.GetKey (KeyCode.W))
+			if (transform.position.z < 0)
 			{
-				transform.position += Vector3.back*riseSpeed/2;
-			}	
-			if (Input.GetKey (KeyCode.S))
-			{
-				if (transform.position.z < 0)
-				{
-					transform.position += Vector3.forward*riseSpeed;
-				}
+				transform.position += Vector3.forward*riseSpeed;
 			}
 		}
         //rb.velocity = transform.right * forwardVelocity + transform.up * dodgeVelocity;

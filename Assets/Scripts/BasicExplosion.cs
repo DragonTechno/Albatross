@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BasicExplosion : MonoBehaviour {
 	
-	/*public float delay;
+	public float delay;
 	public float radius;
 	DamageHandler dmg;
 	public GameObject explosion;
@@ -32,5 +32,5 @@ public class BasicExplosion : MonoBehaviour {
 			blast.GetComponent<DamageOnContact> ().setDamage (dmg.damage);
 		}
 		Destroy (gameObject);
-	}*/
+	}
 }
