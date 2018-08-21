@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class GunScript : MonoBehaviour {
 
-	public GameObject projectile;
+	public GameObject projectileSpawner;
 	public float delay;
-	public float speed;
 	float timer;
 
 	// Use this for initialization
@@ -19,9 +18,14 @@ public class GunScript : MonoBehaviour {
 		timer += Time.fixedDeltaTime;
 		if (Input.GetKey (KeyCode.Space) && timer > delay)
 		{
-			GameObject shot = Instantiate (projectile, transform.position, Quaternion.identity);
-			shot.GetComponent<Rigidbody2D> ().velocity = transform.right * speed;
+            FireProjectile();
 			timer = 0;
 		}
-	}
+    }
+
+    void FireProjectile()
+    {
+        GameObject shotInstance = Instantiate(projectileSpawner, transform.position, transform.rotation);
+        shotInstance.GetComponent<ProjectilSpawner>().destroySelf = true;
+    }
 }

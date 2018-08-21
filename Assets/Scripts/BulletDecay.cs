@@ -6,6 +6,8 @@ public class BulletDecay : MonoBehaviour {
 
 	public float bulletLife;
 	DamageHandler dmg;
+    public string damageTag;
+    public bool destroy = true;
 	float timer = 0;
 
 	// Use this for initialization
@@ -22,14 +24,17 @@ public class BulletDecay : MonoBehaviour {
 		}
 	}
 
-	void OnCollisionEnter2D(Collision2D coll)
+	void OnTriggerEnter2D(Collider2D coll)
 	{
 		GameObject other = coll.gameObject;
-		if (other.tag == "Damageable")
+		if (other.tag == damageTag)
 		{
             print("Bullet!");
             other.GetComponentInParent<Health>().takeDamage(dmg.damage, gameObject);
-			Destroy (gameObject);
+            if (destroy)
+            {
+                Destroy(gameObject);
+            }
 		}
 	}
 }

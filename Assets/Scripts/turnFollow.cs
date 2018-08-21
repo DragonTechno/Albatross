@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class turnFollow : MonoBehaviour {
 
 	public float turnSpeed; //Maximum angular velocity of the ship
+    public float orbitRate=1;
 	public float speed; //Maximum forward velocity of the ship
 	public float followDistance; //Fight distance of the ship
     public float followHeight;
@@ -13,19 +15,34 @@ public class turnFollow : MonoBehaviour {
     public Vector2 offset;
 	public string enemyType; //Type of the ship (currently unused)
     public bool moveParent = false;
+    public bool turn = true;
 	public GameObject player; //The object it follows
     public patrolHolder pHolder;
     public GameObject target;
+
+    [Header("Hopping Variables")]
+    public bool hop = false;
+    public float hopWaitTime;
+    public float hopDuration;
+    public int shootState = 0;
+    public float shotCutoff;
+
+    float hopDelay;
     Transform[] patrol;
     int patrolIndex;
     Collider2D playerCollider;
     bool fighting;
     bool rising;
-	PlaneManagement planeMan; //The plane data
+    bool moving;
+    PlaneManagement planeMan; //The plane data
 	Rigidbody2D rb; //This object's rigid body
+    Vector2 originalOffset;
+    int slitherDir;
 
 	// Use this for initialization
 	void Start () {
+        hopDelay = 0;
+        slitherDir = 1;
         patrol = pHolder.patrol;
         target = patrol[0].gameObject;
         patrolIndex = 0;
@@ -46,6 +63,9 @@ public class turnFollow : MonoBehaviour {
         {
             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
         }
+        originalOffset = offset;
+        moving = false;
+        OffsetBehavior(Vector2.zero, true);
     }
 
 	// Update is called once per frame
@@ -56,6 +76,10 @@ public class turnFollow : MonoBehaviour {
             float pushForce = 5f;
             Vector2 distance = Vector2.zero;
             float heightDiff = 1000;
+            if(hop)
+            {
+                hopDelay += Time.fixedDeltaTime;
+            }
             if (player)
             {
                 distance = (Vector2)player.transform.position + (Vector2)(Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) - (Vector2)transform.position;
@@ -63,20 +87,15 @@ public class turnFollow : MonoBehaviour {
             }
             if (distance.magnitude < followDistance && heightDiff < followHeight)
             {
-                print("Player hunt");
                 target = player;
                 pushForce = pushForce * 2;
-                if (!IsInvoking("FollowHeight") && !rising)
-                {
-                    Invoke("FollowHeight", 0);
-                }
+                distance = OffsetBehavior(distance);
                 if (!fighting)
                 {
                     if (moveParent)
                     {
                         foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
                         {
-                            print(child.gameObject.name);
                             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, false);
                         }
                     }
@@ -90,16 +109,18 @@ public class turnFollow : MonoBehaviour {
             }
             else
             {
-                print("Patrolling");
+                if(hop)
+                {
+                    moving = false;
+                    hopDelay = 0;
+                }
                 target = patrol[patrolIndex].gameObject;
-                print(target);
                 if (fighting)
                 {
                     if (moveParent)
                     {
                         foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
                         {
-                            print(child.gameObject.name);
                             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
                         }
                     }
@@ -110,7 +131,6 @@ public class turnFollow : MonoBehaviour {
                     planeMan.LeaveFight();
                     fighting = false;
                 }
-                CancelInvoke("FollowHeight");
             }
 
             if (target != player)
@@ -122,35 +142,106 @@ public class turnFollow : MonoBehaviour {
                     patrolIndex = (patrolIndex + 1) % patrol.Length;
                 }
             }
-            // right keeps track of where the pointer is pointing to, or where its right side points to
-            transform.right = (Vector2)Vector3.RotateTowards(transform.right, distance, turnSpeed * Random.Range(.7f, 1.4f), turnSpeed);
-            // the math part of this line makes sure that enemies goes faster when they're further away and is capped
-            rb.velocity = transform.right * speed * Mathf.Clamp(Mathf.Sqrt(distance.magnitude / 10), 1, 1.5f);
-            //rb.velocity = (Vector2.Dot(rb.velocity.normalized * Mathf.Clamp(rb.velocity.magnitude,speed,speed*1.5f), transform.right))*transform.right;
-
+            if(heightDiff > .1)
+            {
+                if (!IsInvoking("FollowHeight") && !rising)
+                {
+                    Invoke("FollowHeight", 0);
+                }
+            }
+            if (turn)
+            {
+                if (!hop || moving)
+                {
+                    // right keeps track of where the pointer is pointing to, or where its right side points to
+                    transform.right = (Vector2)Vector3.RotateTowards(transform.right, distance, turnSpeed * Random.Range(.7f, 1.4f), turnSpeed);
+                    // the math part of this line makes sure that enemies goes faster when they're further away and is capped
+                    rb.velocity = transform.right * speed * Mathf.Clamp(Mathf.Sqrt(distance.magnitude / 5), 0, 1.5f);
+                    //rb.velocity = (Vector2.Dot(rb.velocity.normalized * Mathf.Clamp(rb.velocity.magnitude,speed,speed*1.5f), transform.right))*transform.right;
+                }
+            }
+            else
+            {
+                rb.velocity = distance.normalized * speed * Mathf.Clamp(Mathf.Sqrt(distance.magnitude / 5), .5f, 1.5f);
+            }
+            if(hop)
+            {
+                float wiggle = 1;
+                if(moving && hopDelay > hopDuration)
+                {
+                    print("Timed out");
+                    moving = false;
+                    hopDelay = 0;
+                }
+                else if(!moving && hopDelay > hopWaitTime)
+                {
+                    //This could maybe be done better, saving the enemy firing script.
+                    moving = true;
+                    hopDelay = 0;
+                    GetComponent<BasicEnemyFire>().firing = true;
+                }
+                if(moving && distance.magnitude < wiggle)
+                {
+                    moving = false;
+                    hopDelay = 0;
+                }
+            }
             // an empty list that we'll add to if there are any overlapping enemies
             Collider2D[] nearby = new Collider2D[10];
             // filter states that we're only looking for objects with the enemy layer
             ContactFilter2D enemyFilter = new ContactFilter2D();
             enemyFilter.SetLayerMask(LayerMask.GetMask("Enemy"));
             Physics2D.OverlapCircle(transform.position, pushRadius, enemyFilter, nearby);
-            foreach (Collider2D collider in nearby)
+            if (!hop || moving)
             {
-                if (collider)
+                foreach (Collider2D collider in nearby)
                 {
-                    if (collider.gameObject.GetComponent<turnFollow>())
+                    if (collider)
                     {
-                        turnFollow unit = collider.attachedRigidbody.gameObject.GetComponent<turnFollow>();
-                        // calculate direction from target to me
-                        if (enemyType == unit.enemyType)
+                        if (collider.gameObject.GetComponent<turnFollow>())
                         {
-                            Vector2 bvec = transform.position - unit.gameObject.transform.position;
-                            bvec = bvec.normalized * Mathf.Clamp(pushForce / bvec.magnitude, 1, 100);
-                            rb.AddForce(bvec);
+                            turnFollow unit = collider.attachedRigidbody.gameObject.GetComponent<turnFollow>();
+                            // calculate direction from target to me
+                            if (enemyType == unit.enemyType)
+                            {
+                                Vector2 bvec = transform.position - unit.gameObject.transform.position;
+                                bvec = bvec.normalized * Mathf.Clamp(pushForce / bvec.magnitude, 1, 100);
+                                rb.AddForce(bvec);
+                            }
                         }
                     }
                 }
             }
+            if(hop)
+            {
+                if (!moving)
+                {
+                    rb.velocity = Vector2.zero;
+                    if (shootState == 1)
+                    {
+                        GetComponent<BasicEnemyFire>().firing = true;
+                    }
+                    else if (shootState == 2)
+                    {
+                        GetComponent<BasicEnemyFire>().firing = false;
+                    }
+                }
+                else
+                {
+                    if (shootState == 1)
+                    {
+                        GetComponent<BasicEnemyFire>().firing = false;
+                    }
+                    else if(shootState == 2)
+                    {
+                        GetComponent<BasicEnemyFire>().firing = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            target = patrol[patrolIndex].gameObject;
         }
 	}
 
@@ -228,9 +319,54 @@ public class turnFollow : MonoBehaviour {
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private Vector2 OffsetBehavior(Vector2 direction, bool init = false)
     {
-        print(collision.collider.gameObject.name);
-        print(Physics2D.GetIgnoreCollision(collision.collider,GetComponent<Collider2D>()));
+        if (init)
+        {
+            if (enemyType == "Seeker1" || enemyType == "Seeker2")
+            {
+                RandomOffset();
+            }
+            if (enemyType == "Slither")
+            {
+                offset = new Vector2(offset.x, Random.Range(-offset.y,offset.y));
+                if(Random.Range(0,1) > .5)
+                {
+                    slitherDir = -slitherDir;
+                }
+            }
+        }
+        else
+        {
+            if (!IsInvoking("RandomOffset") && enemyType == "Seeker1")
+            {
+                Invoke("RandomOffset", Random.Range(0, 6));
+            }
+            if(enemyType == "Seeker2")
+            {
+                direction = direction - (Vector2)(Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) + offset;
+                offset = Quaternion.AngleAxis(orbitRate, Vector3.forward) * offset;
+            }
+            if(enemyType == "Slither")
+            {
+                offset = new Vector2(offset.x, offset.y + slitherDir*orbitRate);
+                if (offset.y > originalOffset.y)
+                {
+                    slitherDir = -slitherDir;
+                    offset = new Vector2(offset.x, originalOffset.y);
+                }
+                else if(offset.y < -originalOffset.y)
+                {
+                    slitherDir = -slitherDir;
+                    offset = new Vector2(offset.x, -originalOffset.y);
+                }
+            }
+        }
+        return direction;
+    }
+
+    private void RandomOffset()
+    {
+        offset = Quaternion.AngleAxis(Random.Range(0,360), Vector3.forward) * offset;
     }
 }

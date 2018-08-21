@@ -6,16 +6,70 @@ public class FollowObject : MonoBehaviour {
 
 	public GameObject Target;
 	public float hoverHeight;
+    public float distantHeight;
+    PlaneManagement planeMan;
+    Vector3 offset;
+    bool moving;
+    bool aggro;
+    IEnumerator activeCoroutine;
 
 	// Use this for initialization
 	void Start () {
+        moving = false;
+        aggro = false;
+        offset = Vector3.back * hoverHeight;
+        planeMan = FindObjectOfType<PlaneManagement>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
         if (Target)
         {
-            transform.position = Target.transform.position + Vector3.back * hoverHeight;
+            transform.position = Target.transform.position + offset;
+        }
+        if(!planeMan.fighting)
+        {
+            if (offset != Vector3.back * distantHeight)
+            {
+                if(moving)
+                {
+                    if(aggro)
+                    {
+                        StopCoroutine(activeCoroutine);
+                        moving = false;
+                    }
+                }
+                else
+                {
+                    moving = true;
+                    print("Start rise");
+                    activeCoroutine = AccelerateToOffset(Vector3.back * distantHeight);
+                    StartCoroutine(activeCoroutine);
+                }
+                aggro = false;
+            }
+        }
+        else
+        {
+            if(offset != Vector3.back * hoverHeight)
+            {
+                if (moving)
+                {
+                    if (!aggro)
+                    {
+                        StopCoroutine(activeCoroutine);
+                        moving = false;
+                    }
+                }
+                else
+                {
+                    print("Start descent");
+                    moving = true;
+                    activeCoroutine = AccelerateToOffset(Vector3.back * hoverHeight);
+                    StartCoroutine(activeCoroutine);
+                }
+                aggro = true;
+            }
         }
 	}
 
@@ -43,5 +97,16 @@ public class FollowObject : MonoBehaviour {
             yield return null;
         }
         Target = newTarget;
+    }
+
+    IEnumerator AccelerateToOffset(Vector3 newOffset)
+    {
+        float flatSpeed = .03f;
+        while (offset != newOffset)
+        {
+            offset = Vector3.MoveTowards(offset, newOffset, Mathf.Clamp(Mathf.Log10(Vector3.Distance(offset, newOffset)) + flatSpeed, flatSpeed, 10000));
+            yield return null;
+        }
+        moving = false;
     }
 }

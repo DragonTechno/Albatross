@@ -10,7 +10,7 @@ public class PlaneFlight : MonoBehaviour {
 	public float maxSpeed;
 	public float acceleration;
     public float forwardVelocity;
-    public float dodgeVelocity;
+    public float dodgeLength;
     float trueMinSpeed;
     float trueMaxSpeed;
     bool midDodge;
@@ -109,19 +109,12 @@ public class PlaneFlight : MonoBehaviour {
     public IEnumerator Dodge(string direction)
     {
         midDodge = true;
-        GetComponent<Health>().StartInvincibility(.25f);
-        float dodgeSpeed = 25f;
+        GetComponent<Health>().StartInvincibility(dodgeLength);
         maxSpeed = maxSpeed * 2;
         minSpeed = minSpeed * 2;
         forwardVelocity = maxSpeed;
-        dodgeVelocity = dodgeSpeed;
-        if(direction == "Right")
-        {
-            dodgeVelocity = -dodgeVelocity;
-        }
-        yield return new WaitForSecondsRealtime(.25f);
+        yield return new WaitForSecondsRealtime(dodgeLength);
         midDodge = false;
-        dodgeVelocity = 0f;
         minSpeed = trueMinSpeed;
         maxSpeed = trueMaxSpeed;
     }

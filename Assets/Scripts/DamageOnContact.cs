@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class DamageOnContact : MonoBehaviour {
+    public bool oneHit;
 	internal int damage;
 	internal float initWidth;
 
@@ -11,7 +12,7 @@ public class DamageOnContact : MonoBehaviour {
 		damage = GetComponent<DamageHandler>().damage;
 	}
 
-	void OnCollisionEnter2D(Collision2D coll)
+	void OnTriggerEnter2D(Collider2D coll)
 	{
 		GameObject other = coll.gameObject;
 		print ("Explosion collision with " + other.tag);
@@ -20,7 +21,10 @@ public class DamageOnContact : MonoBehaviour {
 			print ("Damage");
 			other.GetComponentInParent<Health> ().takeDamage(damage, gameObject);
 		}
-        Physics2D.IgnoreCollision(coll.collider,GetComponent<Collider2D>());
+        if(oneHit)
+        {
+            Physics2D.IgnoreCollision(coll, GetComponent<Collider2D>());
+        }
 	}
 
     internal void setDamage(int dmg)
