@@ -6,6 +6,7 @@ public class SingleBulletSpawn : ProjectilSpawner {
 
     public float speed;
     public float spread;
+    public float accuracy = 0; //Low "accuracy" is actually better, it's the possible range it can be about the proper point.
     public float colorSpread;
     public int count = 1;
 
@@ -16,9 +17,10 @@ public class SingleBulletSpawn : ProjectilSpawner {
             for (int i = 0; i < count; ++i)
             {
                 GameObject newBullet = Instantiate(bullet, transform.position, transform.rotation);
-                Quaternion randomRotation = Quaternion.AngleAxis(transform.eulerAngles.z + Random.Range(-spread, spread), Vector3.forward);
+                Quaternion trueRotation = Quaternion.AngleAxis(transform.eulerAngles.z + spread*((float)(i+1)/count-1/2), Vector3.forward);
+                Quaternion randomRotation = Quaternion.AngleAxis(transform.eulerAngles.z + Random.Range(-accuracy, accuracy), trueRotation*Vector3.forward);
                 newBullet.transform.right = randomRotation * Vector3.right;
-                newBullet.GetComponent<Rigidbody2D>().velocity = randomRotation * Vector3.right * speed;
+                newBullet.GetComponent<Rigidbody2D>().velocity =  randomRotation * Vector3.right * speed;
                 if (colorSpread > 0)
                 {
                     SpriteRenderer bulletSprite = newBullet.GetComponent<SpriteRenderer>();

@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class PopupMenu : MonoBehaviour {
 
-    List<Quest> Quests;
-    List<string> Items;
+    internal GlobalDictionary dictionary;
     Text QuestBoard;
     Text Inventory;
     CanvasGroup Menu;
@@ -14,8 +13,7 @@ public class PopupMenu : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Quests = new List<Quest>();
-        Items = new List<string>();
+        dictionary = FindObjectOfType<GlobalDictionary>();
         Text[] menus = GetComponentsInChildren<Text>();
         Menu = GetComponent<CanvasGroup>();
         QuestBoard = menus[0];
@@ -52,13 +50,13 @@ public class PopupMenu : MonoBehaviour {
     {
         string qPrint = "Quests:" + '\n' + '\n';
         string iPrint = "Inventory:" + '\n' + '\n';
-        foreach(Quest quest in Quests)
+        foreach(Quest quest in dictionary.Quests)
         {
             qPrint += "    " + quest.title + '\n';
         }
-        foreach(string item in Items)
+        foreach(Item item in dictionary.Items)
         {
-            iPrint += "    " + item + '\n';
+            iPrint += "    " + item.title + '\n';
         }
         QuestBoard.text = qPrint;
         Inventory.text = iPrint;
@@ -66,18 +64,18 @@ public class PopupMenu : MonoBehaviour {
 
     public void AddQuest(Quest quest)
     {
-        if (!Quests.Contains(quest))
+        if (!dictionary.Quests.Contains(quest))
         {
-            Quests.Add(quest);
+            dictionary.Quests.Add(quest);
         }
         UpdateMenus();
     }
 
     public void RemoveQuest(Quest quest)
     {
-        if (Quests.Contains(quest))
+        if (dictionary.Quests.Contains(quest))
         {
-            Quests.Remove(quest);
+            dictionary.Quests.Remove(quest);
         }
         UpdateMenus();
     }
@@ -86,9 +84,9 @@ public class PopupMenu : MonoBehaviour {
     {
         Quest quest = ScriptableObject.CreateInstance<Quest>();
         quest.title = questName;
-        if (!Quests.Contains(quest))
+        if (!dictionary.Quests.Contains(quest))
         {
-            Quests.Add(quest);
+            dictionary.Quests.Add(quest);
         }
         UpdateMenus();
     }
@@ -97,22 +95,29 @@ public class PopupMenu : MonoBehaviour {
     {
         Quest quest = ScriptableObject.CreateInstance<Quest>();
         quest.title = questName;
-        if (Quests.Contains(quest))
+        if (dictionary.Quests.Contains(quest))
         {
-            Quests.Remove(quest);
+            dictionary.Quests.Remove(quest);
         }
         UpdateMenus();
     }
 
-    public void AddItem(string item)
+    public void AddItem(string itemName)
     {
-        Items.Add(item);
+        Item item = ScriptableObject.CreateInstance<Item>();
+        item.title = itemName;
+        dictionary.Items.Add(item);
         UpdateMenus();
     }
 
-    public void RemoveItem(string item)
+    public void RemoveItem(string itemName)
     {
-        Items.Remove(item);
+        Item item = ScriptableObject.CreateInstance<Item>();
+        item.title = itemName;
+        if(dictionary.Items.Contains(item))
+        {
+            dictionary.Items.Remove(item);
+        }
         UpdateMenus();
     }
 }

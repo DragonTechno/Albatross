@@ -28,6 +28,7 @@ public class Dialog : Interactable
     // Use this for initialization
     void Start()
     {
+        menu = FindObjectOfType<PopupMenu>();
         dictionary = FindObjectOfType<GlobalDictionary>();
         returnCoordinates = new List<Vector2>();
         inDialog = false;
@@ -63,7 +64,7 @@ public class Dialog : Interactable
         {
             if (!inDialog)
             {
-                print("Dialog activation");
+                //print("Dialog activation");
                 inDialog = true;
                 player.GetComponent<IsoMovement>().MovementToggle(false);
                 dialogBox.alpha = 1;
@@ -80,16 +81,23 @@ public class Dialog : Interactable
                 RunString(scriptText); //Run any script associated with the last panel.
                 scriptText = new List<string>();
                 cPage += pageH;
-                print(pageH);
+                //print(pageH);
                 pageH = 0;
                 topOfPage = cPage + 1;
                 //print("Parsing from dialog");
                 string printLine = ParsePage();
-                Text dialogText = dialogBox.GetComponentInChildren<Text>();
-                dialogText = dialogBox.GetComponentInChildren<Text>();
-                dialogText.text = printLine; //Add text to the panel
-                pageH += cPage - topOfPage;
-                cPage = topOfPage;
+                if(cPage <= dialog.Length)
+                {
+                    Text dialogText = dialogBox.GetComponentInChildren<Text>();
+                    dialogText = dialogBox.GetComponentInChildren<Text>();
+                    dialogText.text = printLine; //Add text to the panel
+                    pageH += cPage - topOfPage;
+                    cPage = topOfPage;
+                }
+                else
+                {
+                    InteractionAction();
+                }
             }
             else
             {
@@ -135,49 +143,122 @@ public class Dialog : Interactable
         dialog = dialogBlock[cBlock].Split('\n');
         pages = dialog.Length;
         string startLine = dialog[cPage];
-        print("Start line " + startLine);
+        //print("Start line " + startLine);
         string returnLine = "";
         string checkLine = "";
-        //Check for an option block
-        if(startLine.Substring(0,2) == "if")
+        //Check for an if block
+        bool ifChecked = false;
+        int timesAround = 0;
+        while(!ifChecked)
         {
-            bool booleanVal = CheckTruth(startLine);
-            ++cPage;
-            if (booleanVal)
+            ++timesAround;
+            if(timesAround > 30)
             {
-                ++cPage;
-                startLine = dialog[cPage];
+                return "Wowzers!";
             }
-            else
+            ifChecked = true;
+            if (startLine.Substring(0, 2) == "if")
             {
-                while (checkLine != "else")
+                ifChecked = false;
+                bool booleanVal = CheckTruth(startLine);
+                ++cPage;
+                if (booleanVal)
+                {
+                    ++cPage;
+                    startLine = dialog[cPage];
+                }
+                else
+                {
+                    int expectedElses = 1;
+                    int seenElses = 0;
+                    checkLine = dialog[cPage + 1];
+                    string[] phrases = checkLine.Split(' ');
+
+                    if (phrases[0] == "else")
+                    {
+                        seenElses += 1;
+                    }
+                    else if (phrases[0] == "if")
+                    {
+                        expectedElses += 1;
+                    }
+                    while (seenElses < expectedElses)
+                    {
+                        ++cPage;
+                        checkLine = dialog[cPage + 1];
+                        phrases = checkLine.Split(' ');
+                        if (phrases[0] == "else")
+                        {
+                            seenElses += 1;
+                        }
+                        else if (phrases[0] == "if")
+                        {
+                            expectedElses += 1;
+                        }
+                    }
+                    cPage += 2;
+                    startLine = dialog[cPage];
+                }
+            }
+            else if (startLine == "else")
+            {
+                ifChecked = false;
+                print("Else");
+                checkLine = dialog[cPage + 1];
+                string[] phrases = checkLine.Split(' ');
+
+                int expectedEnds = 1;
+                int seenEnds = 0;
+                if (phrases[0] == "end")
+                {
+                    seenEnds += 1;
+                }
+                else if (phrases[0] == "if")
+                {
+                    expectedEnds += 1;
+                }
+                while (seenEnds < expectedEnds)
                 {
                     ++cPage;
                     checkLine = dialog[cPage + 1];
+                    phrases = checkLine.Split(' ');
+                    if (phrases[0] == "end")
+                    {
+                        seenEnds += 1;
+                    }
+                    else if (phrases[0] == "if")
+                    {
+                        expectedEnds += 1;
+                    }
                 }
                 cPage += 2;
-                startLine = dialog[cPage];
+                if (cPage < dialog.Length)
+                {
+                    startLine = dialog[cPage];
+                }
+                else
+                {
+                    ifChecked = true;
+                    cPage += 5;
+                }
+                //print("Line after end " + startLine);
             }
-        }
-        else if (startLine == "else")
-        {
-            checkLine = CheckAhead(dialog, cPage);
-            while (checkLine != "end")
+            else if (startLine == "end")
             {
-                print("End loop " + cPage);
-                ++cPage;
-                checkLine = dialog[cPage + 1];
-            }
-            cPage += 2;
-            startLine = dialog[cPage];
-            print("Line after end " + startLine);
-        }
-        else if (startLine == "end")
-        {
-            if (cPage < pages - 1)
-            {
-                ++cPage;
-                startLine = dialog[cPage];
+                ifChecked = false;
+                if (cPage < pages - 1)
+                {
+                    ++cPage;
+                    if (cPage < dialog.Length)
+                    {
+                        startLine = dialog[cPage];
+                    }
+                    else
+                    {
+                        ifChecked = true;
+                        cPage += 5;
+                    }
+                }
             }
         }
         if (startLine[0] == '\\')
@@ -212,7 +293,7 @@ public class Dialog : Interactable
         }
         //Check for scripts attached to a line.
         if (cPage < pages - 1)
-        { 
+        {
             checkLine = CheckAhead(dialog, cPage);
         }
         while (cPage < pages - 1 && checkLine[0] == '%')
@@ -234,37 +315,63 @@ public class Dialog : Interactable
 
     string CheckAhead(string[] cDialog,int currPage)
     {
-        print("Page in check ahead " + currPage);
+        //print("Page in check ahead " + currPage);
         bool conditions = true;//Conditions represents whether or not we are, logically, inside of an if
-        while (conditions && currPage < cDialog.Length-1)
+        int timesAround = 0;
+        while (conditions && currPage < cDialog.Length - 1)
         {
+            ++timesAround;
+            if (timesAround > 30)
+            {
+                return "Wowzers! 2!!!";
+            }
             ++currPage;
-            print("Loop " + cDialog[currPage]);
+            //print("Loop " + cDialog[currPage]);
             string[] phrases = cDialog[currPage].Split(' ');
             if (phrases[0] == "if")
             {
                 bool checkBool = CheckTruth(cDialog[currPage]);
-                print(checkBool);
+                //print(checkBool);
                 if (checkBool)
                 {
                     ++currPage;
-                    print("Checkbool " + cDialog[currPage]);
+                    //print("Checkbool " + cDialog[currPage]);
                 }
                 else
                 {
-                    while (phrases[0] != "else")
+                    int expectedElses = 1;
+                    int seenElses = 0;
+                    while (seenElses < expectedElses)
                     {
                         ++currPage;
                         phrases = cDialog[currPage].Split(' ');
+                        if (phrases[0] == "else")
+                        {
+                            seenElses += 1;
+                        }
+                        else if (phrases[0] == "if")
+                        {
+                            expectedElses += 1;
+                        }
                     }
                 }
             }
             else if (phrases[0] == "else")
             {
-                while (phrases[0] != "end")
+                int expectedEnds = 1;
+                int seenEnds = 0;
+                while (seenEnds < expectedEnds)
                 {
                     ++currPage;
                     phrases = cDialog[currPage].Split(' ');
+                    if (phrases[0] == "end")
+                    {
+                        seenEnds += 1;
+                    }
+                    else if (phrases[0] == "if")
+                    {
+                        expectedEnds += 1;
+                    }
                 }
             }
             else if (phrases[0] == "end")
@@ -277,9 +384,21 @@ public class Dialog : Interactable
                 conditions = false;
             }
         }
-        print(currPage + " " + pages + " " + cDialog.Length + "???");
-        print(cDialog[currPage] + " found ahead on page " + currPage + " with pages = " + pages);
+        if(currPage == cDialog.Length - 1)
+        {
+            if(cDialog[currPage] == "end")
+            {
+                ++currPage;
+            }
+        }
+        //print(currPage + " " + pages + " " + cDialog.Length + "???");
+        //print(cDialog[currPage] + " found ahead on page " + currPage + " with pages = " + pages);
         cPage = currPage - 1;
+        if (currPage >= cDialog.Length)
+        {
+            --currPage;
+            ++cPage;
+        }
         return cDialog[currPage];
     }
 
@@ -298,7 +417,7 @@ public class Dialog : Interactable
         dialog = dialogBlock[Block].Split('\n');
         pages = dialog.Length;
         cPage = Page - 1;
-        print(cBlock.ToString() + " " + cPage);
+        //print(cBlock.ToString() + " " + cPage);
     }
 
     public void Deactivate() //Stop clicking the panel from progressing text
@@ -317,7 +436,7 @@ public class Dialog : Interactable
     {
         foreach (string script in scripts)
         {
-            print(script);
+            //print(script);
             string tempScript = script.Replace("\n", string.Empty);
             string[] phrases = tempScript.Split(' ');
             if (phrases[0] == "goto")
@@ -334,19 +453,21 @@ public class Dialog : Interactable
             }
             else if (phrases[0] == "AddItem")
             {
-                FindObjectOfType<PopupMenu>().AddItem(phrases[1]);
+                menu.AddItem(phrases[1]);
             }
             else if (phrases[0] == "RemItem")
             {
-                FindObjectOfType<PopupMenu>().RemoveItem(phrases[1]);
+                menu.RemoveItem(phrases[1]);
             }
             else if (phrases[0] == "AddQuest")
             {
-                FindObjectOfType<PopupMenu>().AddQuest(phrases[1]);
+                menu.AddQuest(phrases[1]);
+                dictionary.BooleanDictionary[phrases[1] + "R"] = true;
             }
             else if (phrases[0] == "RemQuest")
             {
-                FindObjectOfType<PopupMenu>().RemoveQuest(phrases[1]);
+                menu.RemoveQuest(phrases[1]);
+                dictionary.BooleanDictionary[phrases[1] + "C"] = true;
             }
             else if (phrases[0] == "Continue")
             {

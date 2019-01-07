@@ -37,4 +37,18 @@ public class BulletDecay : MonoBehaviour {
             }
 		}
 	}
+
+    void OnCollisionEnter(Collision coll)
+    {
+        GameObject other = coll.gameObject;
+        if (other.tag == damageTag)
+        {
+            print("Bullet!");
+            other.GetComponentInParent<Health>().takeDamage(dmg.damage, gameObject);
+            if (destroy)
+            {
+                Destroy(gameObject);
+            }
+        }
+    }
 }

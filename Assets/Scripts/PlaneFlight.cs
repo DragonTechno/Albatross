@@ -9,10 +9,16 @@ public class PlaneFlight : MonoBehaviour {
 	public float minSpeed;
 	public float maxSpeed;
 	public float acceleration;
-    public float forwardVelocity;
+    public float dodgeSpeedMultiplier;
     public float dodgeLength;
+    public float dodgeDelay;
+    public float maxBoost;
+    public float boostRecoverySpeed;
+    public float dodgeCost;
+    internal float boost;
     float trueMinSpeed;
     float trueMaxSpeed;
+    float forwardVelocity;
     bool midDodge;
 	bool rising;
 	Animator anim;
@@ -21,6 +27,7 @@ public class PlaneFlight : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        boost = maxBoost;
         trueMinSpeed = minSpeed;
         trueMaxSpeed = maxSpeed;
         anim = GetComponent<Animator> ();
@@ -34,15 +41,16 @@ public class PlaneFlight : MonoBehaviour {
 
     // Update is called once per frame
     void FixedUpdate () {
+        boost = Mathf.Clamp(boost + boostRecoverySpeed, 0, maxBoost);
         if (planeMan.fighting && !rising && transform.position.z > -planeMan.shift+.1f)
         {
             transform.position = new Vector3(transform.position.x,transform.position.y,0) + planeMan.shift * Vector3.back;
         }
-		if (Input.GetKey (KeyCode.W))
+		if (Input.GetKey (KeyCode.Z))
 		{
 			transform.position += Vector3.back*riseSpeed/2;
 		}	
-		if (Input.GetKey (KeyCode.S))
+		if (Input.GetKey (KeyCode.X))
 		{
 			if (transform.position.z < 0)
 			{
@@ -73,7 +81,7 @@ public class PlaneFlight : MonoBehaviour {
 			forwardVelocity -= acceleration;
 		}
         forwardVelocity = Mathf.Clamp(forwardVelocity, minSpeed, maxSpeed);
-		if (Input.GetKey (KeyCode.Q))
+		if (Input.GetKey (KeyCode.LeftShift) && boost >= dodgeCost)
 		{
 			if (!midDodge)
 			{
@@ -81,7 +89,7 @@ public class PlaneFlight : MonoBehaviour {
                 StartCoroutine(Dodge("Left"));
 			}
 		}
-		if (Input.GetKey (KeyCode.E))
+		if (Input.GetKey (KeyCode.RightShift) && boost >= dodgeCost)
 		{
 			if (!midDodge)
 			{
@@ -108,12 +116,13 @@ public class PlaneFlight : MonoBehaviour {
 
     public IEnumerator Dodge(string direction)
     {
+        boost -= dodgeCost;
         midDodge = true;
         GetComponent<Health>().StartInvincibility(dodgeLength);
-        maxSpeed = maxSpeed * 2;
-        minSpeed = minSpeed * 2;
+        maxSpeed = maxSpeed * dodgeSpeedMultiplier;
+        minSpeed = minSpeed * dodgeSpeedMultiplier;
         forwardVelocity = maxSpeed;
-        yield return new WaitForSecondsRealtime(dodgeLength);
+        yield return new WaitForSecondsRealtime(dodgeLength+dodgeDelay);
         midDodge = false;
         minSpeed = trueMinSpeed;
         maxSpeed = trueMaxSpeed;

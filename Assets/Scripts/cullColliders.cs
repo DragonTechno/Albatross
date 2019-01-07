@@ -24,22 +24,25 @@ public class cullColliders : MonoBehaviour {
     // Update is called once per frame
     void Update () {
         float cullingDistance = Camera.main.orthographicSize*cullingProportion;
-        float distance = ((Vector2)transform.position - (Vector2)plane.transform.position).magnitude - Mathf.Max(sprite.bounds.extents.x,sprite.bounds.extents.y);
-        if(distance <= cullingDistance && !active)
+        if (plane)
         {
-            print("Uncull " + gameObject.name);
-            coll.enabled = true;
-            active = true;
-            sprite.enabled = true;
-            print("Finished unculling " + gameObject.name);
-        }
-        else if(distance > cullingDistance && active)
-        {
-            print("Cull " + gameObject.name);
-            coll.enabled = false;
-            active = false;
-            sprite.enabled = false;
-            print("Finished culling " + gameObject.name);
+            float distance = ((Vector2)transform.position - (Vector2)plane.transform.position).magnitude - Mathf.Max(sprite.bounds.extents.x, sprite.bounds.extents.y);
+            if (distance <= cullingDistance && !active)
+            {
+                //print("Uncull " + gameObject.name);
+                coll.enabled = true;
+                active = true;
+                sprite.enabled = true;
+                //print("Finished unculling " + gameObject.name);
+            }
+            else if (distance > cullingDistance && active)
+            {
+                //print("Cull " + gameObject.name);
+                coll.enabled = false;
+                active = false;
+                sprite.enabled = false;
+                //print("Finished culling " + gameObject.name);
+            }
         }
     }
 }

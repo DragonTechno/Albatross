@@ -15,10 +15,8 @@ public class DamageOnContact : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D coll)
 	{
 		GameObject other = coll.gameObject;
-		print ("Explosion collision with " + other.tag);
 		if (other.GetComponentInParent<Health>())
 		{
-			print ("Damage");
 			other.GetComponentInParent<Health> ().takeDamage(damage, gameObject);
 		}
         if(oneHit)

@@ -11,20 +11,27 @@ public class turnFollow : MonoBehaviour {
 	public float followDistance; //Fight distance of the ship
     public float followHeight;
     public float riseSpeed;
-    public float wayPointDis;
+    public float wayPointDis; //How close this has to get to a waypoint before switching to a different one
     public Vector2 offset;
+    public float orbitRadius; //For orbiting follow paths
 	public string enemyType; //Type of the ship (currently unused)
+    public bool followPlayer = true;
     public bool moveParent = false;
-    public bool turn = true;
+    public bool turn = true; //Whether the ship's sprite turns with velocity
+    public bool faceTarget;
+    public bool rotateWithTarget;
+    public bool rotateInPlace; //For enemies that rotate in place
+    public float rotationSpeed; 
 	public GameObject player; //The object it follows
     public patrolHolder pHolder;
     public GameObject target;
+    public bool forceOutOfFight = false;
 
     [Header("Hopping Variables")]
     public bool hop = false;
     public float hopWaitTime;
     public float hopDuration;
-    public int shootState = 0;
+    public int shootState = 0;//1=Attack while still, 2=Attack while moving
     public float shotCutoff;
 
     float hopDelay;
@@ -37,31 +44,51 @@ public class turnFollow : MonoBehaviour {
     PlaneManagement planeMan; //The plane data
 	Rigidbody2D rb; //This object's rigid body
     Vector2 originalOffset;
+    Vector2 orbitPosition;
     int slitherDir;
+    BasicEnemyFire EnemyFire;
 
 	// Use this for initialization
 	void Start () {
-        hopDelay = 0;
+        hopDelay = Random.Range(0,hopWaitTime);
+        EnemyFire = GetComponent<BasicEnemyFire>();
         slitherDir = 1;
-        patrol = pHolder.patrol;
-        target = patrol[0].gameObject;
+        if (pHolder)
+        {
+            patrol = pHolder.patrol;
+            target = patrol[0].gameObject;
+        }
+        else if(followPlayer && player)
+        {
+            target = player;
+        }
+        else if(!target)
+        {
+            target = gameObject;
+        }
         patrolIndex = 0;
 		rb = GetComponent<Rigidbody2D> ();
 		planeMan = FindObjectOfType<PlaneManagement> ();
-        playerCollider = player.GetComponent<Collider2D>();
+        if (followPlayer)
+        {
+            playerCollider = player.GetComponent<Collider2D>();
+        }
         fighting = false;
         // for testing purposes, makes sure it's keeping track of the right plane manager
         Invoke("CheckAgain", .05f);
-        if (moveParent)
+        if (followPlayer)
         {
-            foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
+            if (moveParent)
             {
-                Physics2D.IgnoreCollision(child, playerCollider, true);
+                foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
+                {
+                    Physics2D.IgnoreCollision(child, playerCollider, true);
+                }
             }
-        }
-        else
-        {
-            Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
+            else
+            {
+                Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
+            }
         }
         originalOffset = offset;
         moving = false;
@@ -69,7 +96,8 @@ public class turnFollow : MonoBehaviour {
     }
 
 	// Update is called once per frame
-	void FixedUpdate () {
+	void FixedUpdate ()
+    {
         if (target)
         {
             float pushRadius = 10f;
@@ -80,17 +108,31 @@ public class turnFollow : MonoBehaviour {
             {
                 hopDelay += Time.fixedDeltaTime;
             }
-            if (player)
+            if (followPlayer && player)
             {
-                distance = (Vector2)player.transform.position + (Vector2)(Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) - (Vector2)transform.position;
+                if (rotateWithTarget)
+                {
+                    distance = player.transform.position + (Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) - transform.position;
+                }
+                else
+                {
+                    distance = player.transform.position + (Vector3)offset - transform.position;
+                }
                 heightDiff = Mathf.Abs(player.transform.position.z - transform.position.z);
             }
-            if (distance.magnitude < followDistance && heightDiff < followHeight)
+            else
+            {
+                if (faceTarget)
+                {
+                    transform.right = target.transform.position - transform.position;
+                }
+            }
+            if (followPlayer && distance.magnitude < followDistance && heightDiff < followHeight && player && !forceOutOfFight)
             {
                 target = player;
                 pushForce = pushForce * 2;
                 distance = OffsetBehavior(distance);
-                if (!fighting)
+                if (!fighting && followPlayer)
                 {
                     if (moveParent)
                     {
@@ -106,27 +148,37 @@ public class turnFollow : MonoBehaviour {
                     planeMan.RequestFight();
                     fighting = true;
                 }
+                if (faceTarget)
+                {
+                    transform.right = player.transform.position - transform.position;
+                }
             }
             else
             {
-                if(hop)
+                if(hop && !target)
                 {
                     moving = false;
                     hopDelay = 0;
                 }
-                target = patrol[patrolIndex].gameObject;
+                if(pHolder)
+                {
+                    target = patrol[patrolIndex].gameObject;
+                }
                 if (fighting)
                 {
-                    if (moveParent)
+                    if (followPlayer && player)
                     {
-                        foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
+                        if (moveParent)
+                        {
+                            foreach (Collider2D child in transform.parent.GetComponentsInChildren<Collider2D>())
+                            {
+                                Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
+                            }
+                        }
+                        else
                         {
                             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
                         }
-                    }
-                    else
-                    {
-                        Physics2D.IgnoreCollision(GetComponent<Collider2D>(), playerCollider, true);
                     }
                     planeMan.LeaveFight();
                     fighting = false;
@@ -137,7 +189,7 @@ public class turnFollow : MonoBehaviour {
             {
                 distance = (Vector2)target.transform.position - (Vector2)transform.position;
                 heightDiff = Mathf.Abs(target.transform.position.z - transform.position.z);
-                if(distance.magnitude < wayPointDis)
+                if(pHolder && distance.magnitude < wayPointDis)
                 {
                     patrolIndex = (patrolIndex + 1) % patrol.Length;
                 }
@@ -169,16 +221,17 @@ public class turnFollow : MonoBehaviour {
                 float wiggle = 1;
                 if(moving && hopDelay > hopDuration)
                 {
-                    print("Timed out");
                     moving = false;
                     hopDelay = 0;
                 }
                 else if(!moving && hopDelay > hopWaitTime)
                 {
-                    //This could maybe be done better, saving the enemy firing script.
                     moving = true;
                     hopDelay = 0;
-                    GetComponent<BasicEnemyFire>().firing = true;
+                    if (EnemyFire)
+                    {
+                        GetComponent<BasicEnemyFire>().firing = true;
+                    }
                 }
                 if(moving && distance.magnitude < wiggle)
                 {
@@ -217,31 +270,54 @@ public class turnFollow : MonoBehaviour {
                 if (!moving)
                 {
                     rb.velocity = Vector2.zero;
-                    if (shootState == 1)
+                    if (EnemyFire)
                     {
-                        GetComponent<BasicEnemyFire>().firing = true;
-                    }
-                    else if (shootState == 2)
-                    {
-                        GetComponent<BasicEnemyFire>().firing = false;
+                        if (shootState == 1)
+                        {
+                            GetComponent<BasicEnemyFire>().firing = true;
+                        }
+                        else if (shootState == 2)
+                        {
+                            GetComponent<BasicEnemyFire>().firing = false;
+                        }
                     }
                 }
                 else
                 {
-                    if (shootState == 1)
+                    if (EnemyFire)
                     {
-                        GetComponent<BasicEnemyFire>().firing = false;
-                    }
-                    else if(shootState == 2)
-                    {
-                        GetComponent<BasicEnemyFire>().firing = true;
+                        if (shootState == 1)
+                        {
+                            GetComponent<BasicEnemyFire>().firing = false;
+                        }
+                        else if (shootState == 2)
+                        {
+                            GetComponent<BasicEnemyFire>().firing = true;
+                        }
                     }
                 }
             }
         }
         else
         {
-            target = patrol[patrolIndex].gameObject;
+            if (pHolder)
+            {
+                target = patrol[patrolIndex].gameObject;
+            }
+        }
+        if(rotateInPlace)
+        {
+            if(fighting)
+            {
+                if(moving && !turn)
+                {
+                    transform.right = Quaternion.AngleAxis(rotationSpeed, Vector3.forward) * transform.right;
+                }
+            }
+            else
+            {
+                transform.right = Quaternion.AngleAxis(rotationSpeed, Vector3.forward)*transform.right;
+            }
         }
 	}
 
@@ -319,6 +395,9 @@ public class turnFollow : MonoBehaviour {
         }
     }
 
+    //Seeker1 jumps to follow a random position a certain distance away from the player
+    //Seeker2 follows a constantly rotating orbit about that player.
+    //Slither swims back and forth as it follows the player.
     private Vector2 OffsetBehavior(Vector2 direction, bool init = false)
     {
         if (init)
@@ -344,8 +423,16 @@ public class turnFollow : MonoBehaviour {
             }
             if(enemyType == "Seeker2")
             {
-                direction = direction - (Vector2)(Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) + offset;
-                offset = Quaternion.AngleAxis(orbitRate, Vector3.forward) * offset;
+                orbitPosition = Quaternion.AngleAxis(orbitRate, Vector3.forward) * orbitPosition;
+                offset = originalOffset + orbitPosition;
+                if (rotateWithTarget)
+                {
+                    direction = player.transform.position + (Quaternion.AngleAxis(player.transform.rotation.eulerAngles.z, Vector3.forward) * offset) - transform.position;
+                }
+                else
+                {
+                    direction = player.transform.position + (Vector3)offset - transform.position;
+                }
             }
             if(enemyType == "Slither")
             {
@@ -367,6 +454,7 @@ public class turnFollow : MonoBehaviour {
 
     private void RandomOffset()
     {
-        offset = Quaternion.AngleAxis(Random.Range(0,360), Vector3.forward) * offset;
+        orbitPosition = (Quaternion.AngleAxis(Random.Range(0,360), Vector3.forward) * new Vector2(orbitRadius,0));
+        offset = originalOffset + orbitPosition;
     }
 }

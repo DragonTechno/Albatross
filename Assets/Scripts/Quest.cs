@@ -5,6 +5,7 @@ using UnityEngine;
 public class Quest : ScriptableObject {
 
     internal string title;
+    internal string description;
 
 	// Use this for initialization
 	void Start () {

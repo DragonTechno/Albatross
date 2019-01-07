@@ -9,7 +9,7 @@ public class Health : MonoBehaviour
     public int damageSourcesPerFrame;
     public float invincibleTime;
     internal int frameDamage = 0;
-    internal int currentHealth;
+    public int currentHealth;
     internal List<GameObject> damageSources;
     public bool invincible = false;
     int mainLayer;
@@ -26,10 +26,7 @@ public class Health : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+
     }
 
     public void takeDamage(int damage, GameObject damageSource)
@@ -43,9 +40,12 @@ public class Health : MonoBehaviour
 
     void LateUpdate()
     {
-        if(damageSources.Count > 0)
+        if (currentHealth <= 0)
         {
-            print(damageSources.Count);
+            Die();
+        }
+        if (damageSources.Count > 0)
+        {
             currentHealth -= frameDamage;
             frameDamage = 0;
             damageSources = new List<GameObject>();
@@ -61,7 +61,6 @@ public class Health : MonoBehaviour
     public IEnumerator Invincible(float duration)
     {
         gameObject.layer = 11;
-        print("Invincible");
         invincible = true;
         yield return new WaitForSecondsRealtime(duration);
         gameObject.layer = mainLayer;
