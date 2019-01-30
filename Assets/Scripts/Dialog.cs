@@ -469,6 +469,34 @@ public class Dialog : Interactable
                 menu.RemoveQuest(phrases[1]);
                 dictionary.BooleanDictionary[phrases[1] + "C"] = true;
             }
+            else if (phrases[0] == "SetBool")
+            {
+                if (phrases[1] == "True")
+                {
+                    dictionary.BooleanDictionary[phrases[1]] = true;
+                }
+                else if(phrases[1] == "False")
+                {
+                    dictionary.BooleanDictionary[phrases[1]] = false;
+                }
+                else
+                {
+                    print("Incorrect formatting in SetBool");
+                }
+            }
+            else if (phrases[0] == "AddToInt")
+            {
+                int addValue;
+                int.TryParse(phrases[2], out addValue);
+                if(dictionary.IntDictionary.ContainsKey(phrases[1]))
+                {
+                    dictionary.IntDictionary[phrases[1]] += addValue;
+                }
+                else
+                {
+                    dictionary.IntDictionary[phrases[1]] += addValue;
+                }
+            }
             else if (phrases[0] == "Continue")
             {
             }

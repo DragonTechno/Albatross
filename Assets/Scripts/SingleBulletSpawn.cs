@@ -20,7 +20,7 @@ public class SingleBulletSpawn : ProjectilSpawner {
                 Quaternion trueRotation = Quaternion.AngleAxis(transform.eulerAngles.z + spread*((float)(i+1)/count-1/2), Vector3.forward);
                 Quaternion randomRotation = Quaternion.AngleAxis(transform.eulerAngles.z + Random.Range(-accuracy, accuracy), trueRotation*Vector3.forward);
                 newBullet.transform.right = randomRotation * Vector3.right;
-                newBullet.GetComponent<Rigidbody2D>().velocity =  randomRotation * Vector3.right * speed;
+                newBullet.GetComponent<Rigidbody2D>().velocity =  (Vector2)(randomRotation * Vector2.right * speed) + transform.root.gameObject.GetComponent<Rigidbody2D>().velocity;
                 if (colorSpread > 0)
                 {
                     SpriteRenderer bulletSprite = newBullet.GetComponent<SpriteRenderer>();

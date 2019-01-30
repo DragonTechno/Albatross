@@ -38,7 +38,7 @@ public class BulletDecay : MonoBehaviour {
 		}
 	}
 
-    void OnCollisionEnter(Collision coll)
+    void OnCollisionEnter2D(Collision2D coll)
     {
         GameObject other = coll.gameObject;
         if (other.tag == damageTag)

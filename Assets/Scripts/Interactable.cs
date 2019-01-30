@@ -82,7 +82,14 @@ public class Interactable : MonoBehaviour
         }
         if (phrases.Length == 2)
         {
-            booleanVal = dictionary.BooleanDictionary[phrases[1]];
+            if (dictionary.BooleanDictionary.ContainsKey(phrases[1]))
+            {
+                booleanVal = dictionary.BooleanDictionary[phrases[1]];
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {

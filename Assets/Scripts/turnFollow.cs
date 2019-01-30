@@ -21,6 +21,7 @@ public class turnFollow : MonoBehaviour {
     public bool faceTarget;
     public bool rotateWithTarget;
     public bool rotateInPlace; //For enemies that rotate in place
+    public bool rotateWhileStill;
     public float rotationSpeed; 
 	public GameObject player; //The object it follows
     public patrolHolder pHolder;
@@ -309,7 +310,7 @@ public class turnFollow : MonoBehaviour {
         {
             if(fighting)
             {
-                if(moving && !turn)
+                if((moving || rotateWhileStill) && !turn)
                 {
                     transform.right = Quaternion.AngleAxis(rotationSpeed, Vector3.forward) * transform.right;
                 }
@@ -455,6 +456,7 @@ public class turnFollow : MonoBehaviour {
     private void RandomOffset()
     {
         orbitPosition = (Quaternion.AngleAxis(Random.Range(0,360), Vector3.forward) * new Vector2(orbitRadius,0));
+        transform.right = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.forward) * Vector2.up;
         offset = originalOffset + orbitPosition;
     }
 }

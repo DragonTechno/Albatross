@@ -5,8 +5,11 @@ using UnityEngine;
 public class GunScript : MonoBehaviour {
 
 	public GameObject projectileSpawner;
-	public float delay;
-	float timer;
+    public GameObject specialSpawner;
+	public float projectileDelay;
+    public float specialDelay;
+	float projectileTimer;
+    float specialTimer;
 
 	// Use this for initialization
 	void Start () {
@@ -15,17 +18,31 @@ public class GunScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		timer += Time.fixedDeltaTime;
-		if (Input.GetKey (KeyCode.Space) && timer > delay)
+		projectileTimer += Time.fixedDeltaTime;
+        specialTimer += Time.fixedDeltaTime;
+        if (Input.GetKey (KeyCode.Space) && projectileTimer > projectileDelay)
 		{
             FireProjectile();
-			timer = 0;
+			projectileTimer = 0;
 		}
+        if (Input.GetKey(KeyCode.LeftControl) && specialTimer > specialDelay)
+        {
+            FireSpecial();
+            specialTimer = 0;
+        }
     }
 
     void FireProjectile()
     {
         GameObject shotInstance = Instantiate(projectileSpawner, transform.position, transform.rotation);
+        shotInstance.transform.parent = transform.root;
+        shotInstance.GetComponent<ProjectilSpawner>().destroySelf = true;
+    }
+
+    void FireSpecial()
+    {
+        GameObject shotInstance = Instantiate(specialSpawner, transform.position, transform.rotation);
+        shotInstance.transform.parent = transform.root;
         shotInstance.GetComponent<ProjectilSpawner>().destroySelf = true;
     }
 }

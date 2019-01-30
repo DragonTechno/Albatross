@@ -6,7 +6,7 @@ public class Health : MonoBehaviour
 {
 
     public int maxHealth;
-    public int damageSourcesPerFrame;
+    public int damageSourcesPerFrame = 5;
     public float invincibleTime;
     internal int frameDamage = 0;
     public int currentHealth;

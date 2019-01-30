@@ -27,7 +27,7 @@ public class BasicEnemyFire : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-		
+
 	}
 	
 	// Update is called once per frame
@@ -81,7 +81,8 @@ public class BasicEnemyFire : MonoBehaviour {
         for (int i = 0; i < count; ++i)
         {
             GameObject newProjectile = Instantiate(projectile, transform.position, transform.rotation);
-            Quaternion trueRotation = Quaternion.AngleAxis(transform.eulerAngles.z + spread * ((float)(i + 1) / pCount - 1 / 2) + Random.Range(-accuracy, accuracy), Vector3.forward);
+            int middle = (count - 1) / 2;
+            Quaternion trueRotation = Quaternion.AngleAxis(transform.eulerAngles.z + spread*(middle-i)/count + Random.Range(-accuracy, accuracy), Vector3.forward);
             newProjectile.transform.right = trueRotation * Vector3.right;
             if (!parentToObject)
             {
@@ -90,7 +91,6 @@ public class BasicEnemyFire : MonoBehaviour {
             else
             {
                 newProjectile.transform.parent = transform;
-                newProjectile.transform.localScale = newProjectile.transform.lossyScale;
             }
             if (colorSpread > 0)
             {

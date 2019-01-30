@@ -7,6 +7,10 @@ public class SeekerBullet : MonoBehaviour
     public float seekingSpeed;
     public float seekingRange;
     public float seekingAngle;
+    public float acceleration;
+    public float deceleration;
+    public float minSpeed;
+    public float maxSpeed;
     public LayerMask seekingLayer;
     GameObject target;
 
@@ -53,7 +57,12 @@ public class SeekerBullet : MonoBehaviour
             transform.right = (Vector2)Vector3.RotateTowards(transform.right, distance, seekingSpeed, 1);
             Rigidbody2D rb = GetComponent<Rigidbody2D>();
             // the math part of this line makes sure that enemies goes faster when they're further away and is capped
-            rb.velocity = transform.right * rb.velocity.magnitude;
+            rb.velocity = transform.right * Mathf.Clamp(rb.velocity.magnitude+acceleration,minSpeed,maxSpeed);
+        }
+        else
+        {
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            rb.velocity = transform.right * Mathf.Clamp(rb.velocity.magnitude - deceleration, minSpeed, maxSpeed);
         }
     }
 }

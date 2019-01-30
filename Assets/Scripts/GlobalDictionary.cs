@@ -16,6 +16,9 @@ public class GlobalDictionary : MonoBehaviour {
     //Awake is always called before any Start functions
     void Awake()
     {
+        Quests = new List<Quest>();
+        Items = new List<Item>();
+
         //Check if instance already exists
         if (instance == null)
 
@@ -30,12 +33,6 @@ public class GlobalDictionary : MonoBehaviour {
 
         //Sets this to not be destroyed when reloading scene
         DontDestroyOnLoad(gameObject);
-    }
-
-    private void Start()
-    {
-        Quests = new List<Quest>();
-        Items = new List<Item>();
     }
 
     private void Reset()
