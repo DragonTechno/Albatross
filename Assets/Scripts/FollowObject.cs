@@ -7,6 +7,7 @@ public class FollowObject : MonoBehaviour {
 	public GameObject Target;
 	public float hoverHeight;
     public float distantHeight;
+    public float cameraChangeSpeed;
     PlaneManagement planeMan;
     Vector3 offset;
     bool moving;
@@ -29,46 +30,57 @@ public class FollowObject : MonoBehaviour {
         }
         if(!planeMan.fighting)
         {
-            if (offset != Vector3.back * distantHeight)
+            if (offset != Vector3.back * distantHeight && aggro)
             {
                 if(moving)
                 {
-                    if(aggro)
-                    {
-                        StopCoroutine(activeCoroutine);
-                        moving = false;
-                    }
+                    StopCoroutine(activeCoroutine);
                 }
-                else
-                {
-                    moving = true;
-                    print("Start rise");
-                    activeCoroutine = AccelerateToOffset(Vector3.back * distantHeight);
-                    StartCoroutine(activeCoroutine);
-                }
+                moving = true;
+                print("Start rise");
+                activeCoroutine = AccelerateToOffset(Vector3.back * distantHeight);
+                StartCoroutine(activeCoroutine);
                 aggro = false;
             }
         }
         else
         {
-            if(offset != Vector3.back * hoverHeight)
+            if(offset != Vector3.back * hoverHeight && !aggro)
             {
                 if (moving)
                 {
-                    if (!aggro)
-                    {
-                        StopCoroutine(activeCoroutine);
-                        moving = false;
-                    }
+                    StopCoroutine(activeCoroutine);
+                    moving = false;
                 }
-                else
-                {
-                    print("Start descent");
-                    moving = true;
-                    activeCoroutine = AccelerateToOffset(Vector3.back * hoverHeight);
-                    StartCoroutine(activeCoroutine);
-                }
+                print("Start descent");
+                moving = true;
+                activeCoroutine = AccelerateToOffset(Vector3.back * hoverHeight);
+                StartCoroutine(activeCoroutine);
                 aggro = true;
+            }
+        }
+        if(Input.GetKey(KeyCode.W))
+        {
+            if (activeCoroutine != null)
+            {
+                StopCoroutine(activeCoroutine);
+            }
+            moving = false;
+            if (Input.GetKey(KeyCode.W))
+            {
+                offset += Vector3.forward * cameraChangeSpeed;
+            }
+        }
+        else if(Input.GetKey(KeyCode.S))
+        {
+            if(activeCoroutine != null)
+            {
+                StopCoroutine(activeCoroutine);
+            }
+            moving = false;
+            if (Input.GetKey(KeyCode.S))
+            {
+                offset -= Vector3.forward * cameraChangeSpeed;
             }
         }
 	}
@@ -108,5 +120,6 @@ public class FollowObject : MonoBehaviour {
             yield return null;
         }
         moving = false;
+        activeCoroutine = null;
     }
 }

@@ -90,7 +90,14 @@ public class Dialog : Interactable
                 {
                     Text dialogText = dialogBox.GetComponentInChildren<Text>();
                     dialogText = dialogBox.GetComponentInChildren<Text>();
-                    dialogText.text = printLine; //Add text to the panel
+                    if(printLine[0] == '$')
+                    {
+
+                    }
+                    else
+                    {
+                        dialogText.text = printLine; //Add text to the panel
+                    }
                     pageH += cPage - topOfPage;
                     cPage = topOfPage;
                 }
