@@ -10,18 +10,19 @@ public class BulletDecay : MonoBehaviour {
     public bool destroy = true;
 	float timer = 0;
 
-	// Use this for initialization
-	void Awake () {
-		dmg = GetComponent<DamageHandler> ();
-	}
+    private void OnEnable()
+    {
+        dmg = GetComponent<DamageHandler>();
+        timer = 0;
+    }
 
-	// Update is called once per frame
-	void FixedUpdate () {
+    // Update is called once per frame
+    void FixedUpdate () {
 		timer += Time.fixedDeltaTime;
 		if (timer > bulletLife)
 		{
-			Destroy (gameObject);
-		}
+            gameObject.SetActive(false);
+        }
 	}
 
 	void OnTriggerEnter2D(Collider2D coll)
@@ -29,11 +30,10 @@ public class BulletDecay : MonoBehaviour {
 		GameObject other = coll.gameObject;
 		if (other.tag == damageTag)
 		{
-            print("Bullet!");
             other.GetComponentInParent<Health>().takeDamage(dmg.damage, gameObject);
             if (destroy)
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
 		}
 	}
@@ -43,11 +43,10 @@ public class BulletDecay : MonoBehaviour {
         GameObject other = coll.gameObject;
         if (other.tag == damageTag)
         {
-            print("Bullet!");
             other.GetComponentInParent<Health>().takeDamage(dmg.damage, gameObject);
             if (destroy)
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
     }

@@ -12,7 +12,7 @@ public class SeekerBullet : MonoBehaviour
     public float minSpeed;
     public float maxSpeed;
     public LayerMask seekingLayer;
-    GameObject target;
+    public GameObject target;
 
     // Start is called before the first frame update
     void Start()
@@ -21,7 +21,7 @@ public class SeekerBullet : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         if(target)
         {
@@ -38,7 +38,6 @@ public class SeekerBullet : MonoBehaviour
             {
                 if (collider)
                 {
-                    print("Collider check");
                     Vector2 distance = collider.transform.position - transform.position;
                     if(Vector2.Angle(distance,GetComponent<Rigidbody2D>().velocity)<seekingAngle && distance.magnitude < minDistance)
                     {
@@ -50,7 +49,6 @@ public class SeekerBullet : MonoBehaviour
         }
         if(target)
         {
-            print(target.name);
             Vector2 distance = target.transform.position - transform.position;
 
             // right keeps track of where the pointer is pointing to, or where its right side points to

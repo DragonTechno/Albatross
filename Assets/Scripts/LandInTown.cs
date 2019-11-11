@@ -28,7 +28,7 @@ public class LandInTown : MonoBehaviour {
 			if (playerObject)
 			{
 				GameObject other = playerObject.gameObject;
-				if (other.tag == "Plane" && Mathf.Abs(other.transform.position.z) <= townHeight && !loading)
+				if (other.tag == "Plane" && Input.GetKeyDown(KeyCode.F) && !loading)
 				{
                     loading = true;
 					print (other.transform.position);

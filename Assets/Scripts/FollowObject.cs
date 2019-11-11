@@ -43,22 +43,22 @@ public class FollowObject : MonoBehaviour {
                 aggro = false;
             }
         }
-        else
-        {
-            if(offset != Vector3.back * hoverHeight && !aggro)
-            {
-                if (moving)
-                {
-                    StopCoroutine(activeCoroutine);
-                    moving = false;
-                }
-                print("Start descent");
-                moving = true;
-                activeCoroutine = AccelerateToOffset(Vector3.back * hoverHeight);
-                StartCoroutine(activeCoroutine);
-                aggro = true;
-            }
-        }
+        //else
+        //{
+        //    if(offset != Vector3.back * hoverHeight && !aggro)
+        //    {
+        //        if (moving)
+        //        {
+        //            StopCoroutine(activeCoroutine);
+        //            moving = false;
+        //        }
+        //        print("Start descent");
+        //        moving = true;
+        //        activeCoroutine = AccelerateToOffset(Vector3.back * hoverHeight);
+        //        StartCoroutine(activeCoroutine);
+        //        aggro = true;
+        //    }
+        //}
         if(Input.GetKey(KeyCode.W))
         {
             if (activeCoroutine != null)

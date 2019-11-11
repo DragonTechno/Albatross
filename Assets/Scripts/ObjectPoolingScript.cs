@@ -4,10 +4,21 @@ using UnityEngine;
 
 public class ObjectPoolingScript : MonoBehaviour {
 
-    public GameObject pooledObject;
-    public int pooledAmount;
-    public bool willGrow = true;
-    List<GameObject> objectPool;
+    [System.Serializable]
+    public class Pool
+    {
+        public int pooledAmount;
+        public bool willGrow;
+        public GameObject objectType;
+        public List<GameObject> objectPool;
+    }
+
+    [System.Serializable]
+    public class PoolDictionary : SerializableDictionary<string, Pool>
+    {
+    }
+
+    [SerializeField] PoolDictionary objectPools = new PoolDictionary();
 
     // Use this for initialization
     void Start () {
@@ -19,22 +30,34 @@ public class ObjectPoolingScript : MonoBehaviour {
 		
 	}
 
-    public void InitializePool(GameObject pO, int pA, bool wG = true)
+    public void InitializePool(GameObject pO, int pA, string objectName, bool wG = true)
     {
-        pooledObject = pO;
-        pooledAmount = pA;
-        willGrow = wG;
-        objectPool = new List<GameObject>();
-        for(int i = 0; i < pooledAmount; i++)
+        Pool newPool = new Pool();
+        newPool.objectType = pO;
+        newPool.pooledAmount = pA;
+        newPool.willGrow = wG;
+        newPool.objectPool = new List<GameObject>();
+
+        for(int i = 0; i < newPool.pooledAmount; i++)
         {
-            GameObject obj = (GameObject)Instantiate(pooledObject);
+            GameObject obj = Instantiate(newPool.objectType);
             obj.SetActive(false);
-            objectPool.Add(obj);
+            newPool.objectPool.Add(obj);
         }
+
+        objectPools[objectName] = newPool;
     }
 
-    public GameObject GetPooledObject()
+    public GameObject GetPooledObject(GameObject poolObject)
     {
+        string objectName = poolObject.name;
+        if(!objectPools.ContainsKey(objectName))
+        {
+            InitializePool(poolObject, 20, objectName);
+        }
+
+        Pool pool = objectPools[objectName];
+        List<GameObject> objectPool = pool.objectPool;
         for(int i = 0; i < objectPool.Count; i++)
         {
             if(!objectPool[i].activeInHierarchy)
@@ -43,13 +66,19 @@ public class ObjectPoolingScript : MonoBehaviour {
             }
         }
 
-        if(willGrow)
+        if(pool.willGrow)
         {
-            GameObject obj = (GameObject)Instantiate(pooledObject);
+            GameObject obj = Instantiate(pool.objectType);
+            obj.SetActive(false);
             objectPool.Add(obj);
             return obj;
         }
 
         return null;
+    }
+
+    public bool Contains(string name)
+    {
+        return objectPools.ContainsKey(name);
     }
 }

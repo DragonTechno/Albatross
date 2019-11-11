@@ -14,16 +14,29 @@ public class DamageOnContact : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
-		GameObject other = coll.gameObject;
-		if (other.GetComponentInParent<Health>())
-		{
-			other.GetComponentInParent<Health> ().takeDamage(damage, gameObject);
-		}
-        if(oneHit)
+        GameObject other = coll.gameObject;
+        if (other.GetComponentInParent<Health>())
+        {
+            other.GetComponentInParent<Health>().takeDamage(damage, gameObject);
+        }
+        if (oneHit)
         {
             Physics2D.IgnoreCollision(coll, GetComponent<Collider2D>());
         }
 	}
+
+    void OnCollisionEnter2D(Collision2D coll)
+    {
+        GameObject other = coll.gameObject;
+        if (other.GetComponentInParent<Health>())
+        {
+            other.GetComponentInParent<Health>().takeDamage(damage, gameObject);
+        }
+        if (oneHit)
+        {
+            Physics2D.IgnoreCollision(coll.collider, GetComponent<Collider2D>());
+        }
+    }
 
     internal void setDamage(int dmg)
     {

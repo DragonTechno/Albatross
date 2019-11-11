@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class DialogButton : MonoBehaviour {
     Dialog connectedDialog;
@@ -12,16 +13,7 @@ public class DialogButton : MonoBehaviour {
         this.scriptText = scriptText;
         this.connectedDialog = connectedDialog;
         Button parentButton = GetComponent<Button>();
-        if (text[0] == '$')
-        {
-            string imageName = text.Substring(1);
-            print(imageName);
-            GetComponent<Image>().sprite = Resources.Load<Sprite>(imageName);
-            RectTransform buttonTransform = GetComponent<RectTransform>();
-            print(buttonTransform.rect.y);
-            float multiplier = 2*buttonTransform.rect.height/(GetComponent<Image>().sprite.bounds.extents.y);
-            buttonTransform.sizeDelta = new Vector2(buttonTransform.sizeDelta.x /multiplier, buttonTransform.sizeDelta.y);
-        }
+        GetComponentInChildren<TextMeshProUGUI>().text = text;
         parentButton.onClick.AddListener(ChangeScript);
         parentButton.onClick.AddListener(DestroyButtons);
     }

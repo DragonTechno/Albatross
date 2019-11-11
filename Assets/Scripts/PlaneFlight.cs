@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlaneFlight : MonoBehaviour {
 
-	public float riseSpeed;
+	//public float riseSpeed;
 	public float turnSpeed;
 	public float minSpeed;
 	public float maxSpeed;
@@ -15,12 +15,13 @@ public class PlaneFlight : MonoBehaviour {
     public float maxBoost;
     public float boostRecoverySpeed;
     public float dodgeCost;
+    public bool turnAccel;
     internal float boost;
     float trueMinSpeed;
     float trueMaxSpeed;
     float forwardVelocity;
     bool midDodge;
-	bool rising;
+	//bool rising;
 	Animator anim;
 	PlaneManagement planeMan;
 	Rigidbody2D rb;
@@ -32,7 +33,7 @@ public class PlaneFlight : MonoBehaviour {
         trueMaxSpeed = maxSpeed;
         anim = GetComponent<Animator> ();
 		rb = GetComponent<Rigidbody2D> ();
-        forwardVelocity = minSpeed;
+        forwardVelocity = maxSpeed;
 		rb.velocity = transform.right * forwardVelocity;
 		planeMan = FindObjectOfType<PlaneManagement> ();
         Invoke("CheckAgain", .05f);
@@ -42,44 +43,80 @@ public class PlaneFlight : MonoBehaviour {
     // Update is called once per frame
     void FixedUpdate () {
         boost = Mathf.Clamp(boost + boostRecoverySpeed, 0, maxBoost);
-        if (planeMan.fighting && !rising && transform.position.z > -planeMan.shift+.1f)
+        if (planeMan.fighting && transform.position.z > -planeMan.shift+.1f)
         {
             transform.position = new Vector3(transform.position.x,transform.position.y,0) + planeMan.shift * Vector3.back;
         }
-		if (Input.GetKey (KeyCode.Z))
-		{
-			transform.position += Vector3.back*riseSpeed/2;
-		}	
-		if (Input.GetKey (KeyCode.X))
-		{
-			if (transform.position.z < 0)
-			{
-				transform.position += Vector3.forward*riseSpeed;
-			}
-		}
+		//if (Input.GetKey (KeyCode.Z))
+		//{
+		//	transform.position += Vector3.back*riseSpeed/2;
+		//}	
+		//if (Input.GetKey (KeyCode.X))
+		//{
+		//	if (transform.position.z < 0)
+		//	{
+		//		transform.position += Vector3.forward*riseSpeed;
+		//	}
+		//}
         //rb.velocity = transform.right * forwardVelocity + transform.up * dodgeVelocity;
         rb.velocity = transform.right * forwardVelocity;
-		if (transform.position.z >= 0)
-		{
-			transform.position = (Vector2) transform.position;
-		}
+        if (transform.position.z >= 0)
+        {
+            transform.position = (Vector2)transform.position;
+        }
 
-		if (Input.GetKey (KeyCode.LeftArrow))
-		{
-			transform.Rotate (new Vector3(0,0,turnSpeed));
-		}
-		if (Input.GetKey (KeyCode.RightArrow))
-		{
-			transform.Rotate (new Vector3(0,0,-turnSpeed));
-		}
-		if (Input.GetKey (KeyCode.UpArrow))
-		{
-			forwardVelocity += acceleration;
-		}
-		if (Input.GetKey (KeyCode.DownArrow))
-		{
-			forwardVelocity -= acceleration;
-		}
+        if (turnAccel)
+        {
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                transform.Rotate(new Vector3(0, 0, turnSpeed));
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                transform.Rotate(new Vector3(0, 0, -turnSpeed));
+            }
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                forwardVelocity += acceleration;
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                forwardVelocity -= acceleration;
+            }
+        }
+        else
+        {
+            Vector2 goalDirection = Vector2.zero;
+
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                goalDirection += Vector2.left;
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                goalDirection += Vector2.right;
+            }
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                goalDirection += Vector2.up;
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                goalDirection += Vector2.down;
+            }
+
+            if (goalDirection != Vector2.zero)
+            {
+                float angle = Vector2.SignedAngle(transform.right, goalDirection);
+                if (Mathf.Abs(angle) < 160)
+                {
+                    // right keeps track of where the pointer is pointing to, or where its right side points to
+                    //Quaternion rotationQ = Quaternion.AngleAxis(Mathf.Sign(angle) * Mathf.Min(Mathf.Abs(angle), Mathf.Abs(turnSpeed)), Vector3.forward);
+                    transform.Rotate(new Vector3(0, 0, Mathf.Sign(angle) * Mathf.Min(Mathf.Abs(angle), Mathf.Abs(turnSpeed))));
+                }
+            }
+        }
+
         forwardVelocity = Mathf.Clamp(forwardVelocity, minSpeed, maxSpeed);
 		if (Input.GetKey (KeyCode.LeftShift) && boost >= dodgeCost)
 		{
@@ -99,20 +136,20 @@ public class PlaneFlight : MonoBehaviour {
         }
 	}
 
-	public IEnumerator ChangeStrata(int direction)
-	{
-		print("Changing strata");
-        rising = true;
-		float newHeight = Mathf.RoundToInt ((transform.position.z + planeMan.shift) / planeMan.strata) * planeMan.strata + direction*planeMan.strata-planeMan.shift;
-		float wiggle = .3f;
-		while(transform.position.z > newHeight + wiggle || transform.position.z < newHeight - wiggle)
-		{
-			transform.position += Vector3.forward*riseSpeed*direction;
-			yield return new WaitForSecondsRealtime(.02f);
-		}
-		transform.position = new Vector3 (transform.position.x, transform.position.y, Mathf.RoundToInt((transform.position.z + planeMan.shift) / planeMan.strata) * planeMan.strata - planeMan.shift);
-        rising = false;
-	}
+	//public IEnumerator ChangeStrata(int direction)
+	//{
+	//	print("Changing strata");
+ //       rising = true;
+	//	float newHeight = Mathf.RoundToInt ((transform.position.z + planeMan.shift) / planeMan.strata) * planeMan.strata + direction*planeMan.strata-planeMan.shift;
+	//	float wiggle = .3f;
+	//	while(transform.position.z > newHeight + wiggle || transform.position.z < newHeight - wiggle)
+	//	{
+	//		transform.position += Vector3.forward*riseSpeed*direction;
+	//		yield return new WaitForSecondsRealtime(.02f);
+	//	}
+	//	transform.position = new Vector3 (transform.position.x, transform.position.y, Mathf.RoundToInt((transform.position.z + planeMan.shift) / planeMan.strata) * planeMan.strata - planeMan.shift);
+ //       rising = false;
+	//}
 
     public IEnumerator Dodge(string direction)
     {
@@ -122,7 +159,7 @@ public class PlaneFlight : MonoBehaviour {
         maxSpeed = maxSpeed * dodgeSpeedMultiplier;
         minSpeed = minSpeed * dodgeSpeedMultiplier;
         forwardVelocity = maxSpeed;
-        yield return new WaitForSecondsRealtime(dodgeLength+dodgeDelay);
+        yield return new WaitForSeconds(dodgeLength+dodgeDelay);
         midDodge = false;
         minSpeed = trueMinSpeed;
         maxSpeed = trueMaxSpeed;

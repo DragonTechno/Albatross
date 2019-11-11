@@ -2,23 +2,30 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BasicEnemyFire : MonoBehaviour {
-
+public class BasicEnemyFire : MonoBehaviour
+{
     public GameObject scope;
     public GameObject target;
+    [Tooltip("Projectiles/bursts fired per second")]
     public float fireRate;
+    [Tooltip("How often the scope is refreshed")]
     public float scopeRate;
     public float aggroDis;
     public float delay;
     public bool firing = true;
+    [Tooltip("Velocity of bullet when fired")]
     public float speed;
+    [Tooltip("How far to seperate shots, if multiple projectiles fire at once")]
     public float spread;
-    public float accuracy = 0; ///Low "accuracy" is actually better, it's the possible range it can be about the proper point.
+    [Tooltip("Low accuracy is actually better, it's the possible range it can be about the proper point.")]
+    public float accuracy = 0; 
     public float colorSpread;
     public bool multiScope;
     public bool parentToObject;
+    [Tooltip("How many projectiles to fire in a shot")]
     public int count = 1;
     public GameObject bullet;
+    ObjectPoolingScript pooler;
 
     [Header("Burst Variables")]
     public bool burst;
@@ -26,8 +33,12 @@ public class BasicEnemyFire : MonoBehaviour {
     int shotsFired;
 
     // Use this for initialization
-    void Start () {
-
+    void OnEnable () {
+        pooler = FindObjectOfType<ObjectPoolingScript>();
+        if(!target)
+        {
+            target = FindObjectOfType<PlaneFlight>().gameObject;
+        }
 	}
 	
 	// Update is called once per frame
@@ -45,10 +56,6 @@ public class BasicEnemyFire : MonoBehaviour {
             }
             else if (distance >= aggroDis)
             {
-                foreach(Transform child in transform)
-                {
-                    Destroy(child.gameObject);
-                }
                 CancelInvoke("AimScope");
                 CancelInvoke("Shoot");
             }
@@ -80,10 +87,17 @@ public class BasicEnemyFire : MonoBehaviour {
     {
         for (int i = 0; i < count; ++i)
         {
-            GameObject newProjectile = Instantiate(projectile, transform.position, transform.rotation);
+            //print("FIRING!");
+            GameObject newProjectile = pooler.GetPooledObject(bullet);
+            newProjectile.transform.position = transform.position;
+            newProjectile.transform.rotation = transform.rotation;
+
             int middle = (count - 1) / 2;
             Quaternion trueRotation = Quaternion.AngleAxis(transform.eulerAngles.z + spread*(middle-i)/count + Random.Range(-accuracy, accuracy), Vector3.forward);
             newProjectile.transform.right = trueRotation * Vector3.right;
+
+            newProjectile.SetActive(true);
+
             if (!parentToObject)
             {
                 newProjectile.GetComponent<Rigidbody2D>().velocity = trueRotation * Vector3.right * speed;
@@ -92,6 +106,7 @@ public class BasicEnemyFire : MonoBehaviour {
             {
                 newProjectile.transform.parent = transform;
             }
+
             if (colorSpread > 0)
             {
                 SpriteRenderer bulletSprite = newProjectile.GetComponent<SpriteRenderer>();

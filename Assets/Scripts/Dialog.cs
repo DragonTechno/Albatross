@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 // all objects with dialog and interaction on the isometric level
 public class Dialog : Interactable
@@ -88,16 +89,8 @@ public class Dialog : Interactable
                 string printLine = ParsePage();
                 if(cPage <= dialog.Length)
                 {
-                    Text dialogText = dialogBox.GetComponentInChildren<Text>();
-                    dialogText = dialogBox.GetComponentInChildren<Text>();
-                    if(printLine[0] == '$')
-                    {
-
-                    }
-                    else
-                    {
-                        dialogText.text = printLine; //Add text to the panel
-                    }
+                    TextMeshProUGUI dialogText = dialogBox.GetComponentInChildren<TextMeshProUGUI>();
+                    dialogText.text = printLine; //Add text to the panel
                     pageH += cPage - topOfPage;
                     cPage = topOfPage;
                 }
